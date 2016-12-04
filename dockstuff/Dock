@@ -1,0 +1,78 @@
+FROM ubuntu
+
+USER root
+WORKDIR /root
+
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists
+
+RUN apt-get clean
+RUN apt-get -y update
+
+
+
+RUN apt-get -y install clamav clamav-daemon
+ADD clamd.conf /etc/clamav/clamd.conf
+#RUN freshclam
+VOLUME /var/run/clamav/clamd.ctl
+#COPY main.cvd /var/lib/clamav
+RUN wget -O /var/lib/clamav/main.cvd http://database.clamav.net/main.cvd
+
+
+RUN wget -O /tmp/hadoop-${HADOOP_VERSION}.tar.gz http://mirrors.whoishostingthis.com/apache/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz && \
+    rm -rf /var/lib/apt/lists/* && \
+    tar -zxf /tmp/hadoop-$HADOOP_VERSION.tar.gz && \
+    rm /tmp/hadoop-$HADOOP_VERSION.tar.gz && \
+    mv hadoop-$HADOOP_VERSION /usr/local/hadoop
+
+RUN mkdir -p /usr/local/hadoop/logs
+
+
+RUN mkdir /var/lib/hadoop
+
+
+
+RUN rm -rf /root/.ssh/id_rsa
+RUN ssh-keygen -t rsa -P '' -f /root/.ssh/id_rsa
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+COPY conf/ssh_config /root/.ssh/config
+
+
+# Overwrite default HADOOP configuration files with our config files && config ssh to accept all connections from unknow hosts.
+COPY conf  $HADOOP_HOME/etc/hadoop/
+
+COPY test.txt /root
+RUN mkdir /config
+ADD config /config/
+
+RUN chmod a+rwx $HADOOP_HOME/etc/hadoop/*
+RUN chmod a+rwx $HADOOP_HOME/sbin/*.*
+RUN $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+
+# Formatting HDFS
+# VOLUME /data
+
+RUN mkdir -p /data/dfs/data /data/dfs/name /data/dfs/namesecondary
+RUN hdfs namenode -format
+
+# Starting services
+# RUN service ssh start
+#RUN $HADOOP_HOME/sbin/start-dfs.sh 
+#RUN $HADOOP_HOME/sbin/start-yarn.sh
+#RUN $HADOOP_HOME/bin/hdfs dfs -mkdir -p /user/root
+
+####################
+# PORTS
+####################
+#
+# http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.3.0/bk_HDP_Reference_Guide/content/reference_chap2.html
+# http://www.cloudera.com/content/cloudera/en/documentation/core/latest/topics/cdh_ig_ports_cdh5.html
+# http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/core-default.xml
+# http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+
+# HDFS: NameNode (NN):
+#	 8020 = fs.defaultFS			(IPC / File system metadata operations)
+#						(9000 is alEXPOSE 5555
+
+
+# CMD ["hdfs"]
