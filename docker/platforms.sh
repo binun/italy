@@ -1,2 +1,2 @@
-declare -a platforms=("mariadb" "mysql" "mongodb" "docker-cassandra")
+declare -a platforms=("mariadb" "mysql" "mongodb" "cassandr")
 declare -a subdirs=("." "." "." "cassandra")
