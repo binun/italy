@@ -9,6 +9,6 @@ do
    subdir=${subdirs[$pi]}
    cd $platform
    echo $platform/$subdir
-   #docker build -t image-$platform .
+   docker build -t image-$platform $subdir
    cd ..
 done
