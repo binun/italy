@@ -158,11 +158,13 @@ public class MariaDBProxy extends DBProxy {
 	   		
 		return this.createTable(tbName, columnDef);
 	}
+	
 	@Override
 	public Object createTable(String dbName, String tbName, String columns) {
 		lastDB = dbName;
 		return this.createTable(tbName, columns);
 	}
+	
 	@Override
 	public String getContent(String dbName, String tbName) {
 		String query = String.format("select %s from %s.%s;", Utils.join(",",this.columns), dbName,tbName);
