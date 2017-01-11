@@ -24,6 +24,10 @@ public class MongoProxy extends DBProxy {
 		port=27017;
 		connect("localhost");
 	}
+    
+    public MongoProxy(String test) {
+    	port = 27017;
+    }
 	@Override
 	public boolean connect(String hostName) {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
