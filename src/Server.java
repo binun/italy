@@ -93,6 +93,8 @@ public class Server {
 	        	   response = " getContent " + dbname + " " + tbname;
 	        	   continue;     	   
 	           }
+	           
+	           System.out.println("Responded with " + response);
 	              
 	           sendData = response.getBytes();          
 	           DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);

@@ -6,12 +6,9 @@ ENV MYSQL_USER=mysql \
     MYSQL_RUN_DIR=/run/mysqld \
     MYSQL_LOG_DIR=/var/log/mysql
 
-RUN apt-get -y update --fix-missing && apt-get install -y openjdk-7-jdk
-
+RUN apt-get -y update --fix-missing
 # Define working directory.
 WORKDIR /data
-# Define commonly used JAVA_HOME variable
-ENV JAVA_HOME /usr/lib/jvm/java-7-openjdk-amd64
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server \
@@ -19,9 +16,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /sbin/entrypoint.sh
-RUN chmod 755 /sbin/entrypoint.sh
+RUN chmod 0777 /sbin/entrypoint.sh
 
-EXPOSE 3306 5555
+EXPOSE 3306
 VOLUME ["${MYSQL_DATA_DIR}", "${MYSQL_RUN_DIR}"]
 ENTRYPOINT ["/sbin/entrypoint.sh"]
 CMD ["/usr/bin/mysqld_safe"]
