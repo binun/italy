@@ -4,8 +4,9 @@ import java.net.DatagramSocket;
 
 public class Server {
     private static DBProxy proxy = null;
+    private static final int myPort = 5555;
 	public static void main(String[] args) throws IOException {
-		int myPort = 5555;
+		
 		
 		DatagramSocket serverSocket = new DatagramSocket(myPort); 
 		byte[] receiveData = new byte[1024];
@@ -23,7 +24,8 @@ public class Server {
 	           
 	           System.out.println("RECEIVED: " + sentence + " from " + IPAddress.getHostName());
 	           String [] parts = sentence.split(" ");
-	           if (parts[0].equals("setupProxy") && proxy==null) 
+	           
+	           /*if (parts[0].equals("setupProxy") && proxy==null) 
 	           { 	   
 	          	   String type = parts[1];
 	        	   if (type.equalsIgnoreCase("mongo")) {
@@ -51,7 +53,7 @@ public class Server {
 	           
 	           // now commands requiring a proxy to be set
 	           if (proxy==null) continue;
-	           
+	           */
 	           if (parts[0].equals("createDB") ) {
 	        	   String dbname = parts[1];
 	        	   //proxy.createDB(dbname);   
@@ -96,9 +98,9 @@ public class Server {
 	           
 	           System.out.println("Responded with " + response);
 	              
-	           sendData = response.getBytes();          
-	           DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-	           serverSocket.send(sendPacket); 
+	           //sendData = response.getBytes();          
+	           //DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+	           //serverSocket.send(sendPacket); 
 		   }
 		   
    }

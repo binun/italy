@@ -1,9 +1,36 @@
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 
 public class Utils {
+	
+	public static String [] getReplicaIPs(String hostsFile) {
+		String strLine;
+	    String [] hosts;
+		ArrayList<String> hostlist = new ArrayList<String>();
+	
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(hostsFile)));
+  
+			while ((strLine = br.readLine()) != null)   {
+	            //System.out.println(strLine);
+	            
+				String [] components = strLine.split(" ");
+				hostlist.add(components[1]); 
+				//System.out.println(components[1]);
+			}
+			br.close();
+		}
+        
+	   catch (Exception e) {
+		   
+	   }
+	   String[] replicaIPs = (String[]) hostlist.toArray(new String[0]);
+	   return replicaIPs;
+	}
+	
 	public static String join(String separator, String [] values) {
 		String result = "";
 		
