@@ -9,4 +9,5 @@ docker ps -a | awk '{print $1}' | grep -v 'CONTAINER' | (while read id; do
 
 	echo "  Updating BFT: $id "
 	docker cp $server $id:/
+	docker cp ./chooseDBMS.sh $id:/
 done)

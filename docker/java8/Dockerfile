@@ -6,7 +6,7 @@ WORKDIR /root
 ENV JAVA_HOME 	/usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH		$PATH:$JAVA_HOME/bin
 
-RUN apt-get clean && apt-get -y update
+RUN apt-get clean && apt-get -y update && apt-get install -y nmap
 
 #RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 #COPY conf/ssh_config /root/.ssh/config

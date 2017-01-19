@@ -17,9 +17,7 @@ RUN echo "deb http://debian.datastax.com/community stable main" > /etc/apt/sourc
 RUN ln -s -f /bin/true /usr/bin/chfn
 
 # Install Cassandra 2.0.10
-RUN apt-get update && \
-    apt-get install -y cassandra=2.0.10 dsc20=2.0.10-1 && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y apt-get install -y cassandra=2.0.10 dsc20=2.0.10-1
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
@@ -31,6 +29,6 @@ RUN /usr/local/bin/config-cassandra-base
 # See https://groups.google.com/forum/#!msg/docker-dev/8TM_jLGpRKU/dewIQhcs7oAJ
 RUN rm -f /etc/security/limits.d/cassandra.conf
 
-EXPOSE 5555 7199 7000 7001 9160 9042 22 8012 61621
+EXPOSE 7199 7000 7001 9160 9042 22 8012 61621
 
 CMD [""]

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 public class Utils {
 	
+	public static final int DBMS_REFRESH = 5000; //milliseconds
+	
 	public static String [] getReplicaIPs(String hostsFile) {
 		String strLine;
 	    String [] hosts;
@@ -49,7 +51,7 @@ public class Utils {
 		ArrayList<String> result = new ArrayList<String>();
 	    //String result="";
 		
-		System.out.println("       EXECUTE " + command);
+		//System.out.println("       EXECUTE " + command);
 		
 		try 
 		{	       
