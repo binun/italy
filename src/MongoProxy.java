@@ -19,26 +19,25 @@ public class MongoProxy extends DBProxy {
    
 	private MongoClient connection = null;
 	private Map<String,String[]> columnsForDBs = new HashMap<String,String[]>();
-	
-    public MongoProxy() {
-		port=27017;
-		connect("localhost");
-	}
+
     
-    public MongoProxy(String test) {
-    	port = 27017;
+    public MongoProxy(String username, String password, String driver) {
+    	
+    	super(27017, "information_schema");
+    	this.username = username;
+		this.password = password;
+		this.driver = driver;
     }
 	@Override
-	public boolean connect(String hostName) {
+	public void connect(String hostName) throws UnknownHostException {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
+		if (connected)
+			return;
 		System.out.println("Mongo DB Connection");
-		try {
-			connection = new MongoClient(hostName, port);
-		} catch (UnknownHostException e) {
-			return false;
-		}
+		connection = new MongoClient(hostName, port);
 		 
-		return true;
+		connected = true;
+
 		
 	}
 
@@ -114,6 +113,15 @@ public class MongoProxy extends DBProxy {
 			//System.out.println(cursor.next());
 		}
 	 return result;
+	}
+	@Override
+	public void disconnect() {
+		if (connection != null) {
+	        try {
+	            connection.close();
+	        } catch (Exception e) { /* ignored */}
+	    }
+		
 	}
 }	
 

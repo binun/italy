@@ -14,7 +14,7 @@ public class MariaDBProxy extends DBProxy {
 		username = "root";
 		password = "root";
 		startDB = "information_schema";
-		connect("localhost");
+		//connect("localhost");
 	}
 	@Override
 	public boolean connect(String hostName) {

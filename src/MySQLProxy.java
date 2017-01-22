@@ -9,48 +9,33 @@ public class MySQLProxy extends DBProxy {
   
     private Connection connection = null;
     
-	public MySQLProxy() {
+	// MySQLProxy("debian-sys-maint", "","com.mysql.jdbc.Driver")
+	// MySQLProxy("root", "root","org.mariadb.jdbc.Driver")
+	public MySQLProxy(String username, String password, String driver) {
 		
-		username = "debian-sys-maint";
-		password = "";
-		startDB = "information_schema";
-		port=3306;
-		connect("localhost");
+		super(3306, "information_schema");
+		this.username = username;
+		this.password = password;
+		this.driver = driver;
 	}
 	@Override
-	public boolean connect(String hostName) {
+	public void connect(String hostName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
-		System.out.println("MySQL JDBC Connection");
-
-		  try {
-			  Class.forName("com.mysql.jdbc.Driver").newInstance();
-		  } catch (ClassNotFoundException e) {
-			  System.out.println("Where is your MySQL JDBC Driver?");
-			  e.printStackTrace();
-			  return false;
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-			
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-		}
-
-		System.out.println("MySQL JDBC Driver Registered!");
-		String connStr = String.format("jdbc:mysql://%s:%d/%s", hostName,port,startDB); 
+		if (connected)
+			return ;
 		
-		try {
-			connection = DriverManager.getConnection(connStr,username, password);
-
-		} catch (SQLException e) {
-			System.out.println("Connection Failed! Check output console");
-			e.printStackTrace();
-			return false;
-		}
-		return true;
+		System.out.println("MySQL JDBC Connection");
+        Class.forName(driver).newInstance();
+		
+        
+		System.out.println("MySQL JDBC Driver Registered!");
+		//String connStr = String.format("jdbc:mysql://%s:%d/%s", hostName,port,startDB); 
+		String driverKind = driver.split(".")[1];
+		String connStr = String.format("jdbc:%s://%s:%d/%s", driverKind, hostName,port,startDB); 
+		connection = DriverManager.getConnection(connStr,username, password);
+		
+		connected = true;
+	
 		
 	}
 
@@ -186,6 +171,15 @@ public class MySQLProxy extends DBProxy {
 		    System.err.println(e.getMessage());
 		  }
 		 return result;
+	}
+	@Override
+	public void disconnect() {
+		if (connection != null) {
+	        try {
+	            connection.close();
+	        } catch (Exception e) { /* ignored */}
+	    }
+		
 	}
 
 }

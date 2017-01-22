@@ -17,7 +17,7 @@ do
 	host=$(nmap -p $port $dbms -oG - | grep "open" | awk '{print $2;exit}')
 	if [ -n "${host}" ]; then
 		echo $host:$port
-		break
+		#break
 	fi
 done
 #nmap -p 27017 172.17.0.4-10 -oG - | grep -E 'open.*mongod' | awk '{print $2}'

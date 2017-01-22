@@ -1,15 +1,59 @@
 import java.net.*;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server {
-    private static DBProxy proxy = null;
+    private static DBProxy actingProxy = null;
     private static final int myPort = 5555;
     private static final Timer myTimer = new Timer();
-    private static String currentDB = ":";
+    private static List<String> currentDBs = null;
+    
+    private static List<DBProxy> proxies = new ArrayList<DBProxy>() {
+        {
+        	add(new MySQLProxy("debian-sys-maint", "","com.mysql.jdbc.Driver"));
+        	add(new MySQLProxy("root", "root","org.mariadb.jdbc.Driver"));
+        	add(new MongoProxy("root", "root","mongo"));
+        }
+    };
+    
+    private static void chooseProxy() {
+    	actingProxy = null;
+    	int i = 0;
+    	synchronized(currentDBs)
+    	 {
+    		 for (String candidate : currentDBs) {
+    		    String host = candidate.split(":")[0];
+    		    Integer port = Integer.valueOf(candidate.split(":")[1]);
+    		 
+    		    for (DBProxy proxy : proxies) { 
+    			   if (proxy.getPort() == port ) {
+    				  actingProxy = proxy;
+    				  try
+    				  {
+						actingProxy.connect(host);
+					  } 
+    				  catch (Exception e) {
+    					actingProxy.disconnect();
+    					actingProxy = null;
+    				    continue; 
+    				  }		     
+						
+    				  break;
+    			   }
+    		     }
+    		 }
+    	 }
+    	
+    	
+    }
     
 	public static void main(String[] args) throws IOException {
 		
@@ -27,13 +71,15 @@ public class Server {
 		public void run() {
 			String [] lines = Utils.execCommand("/chooseDBMS.sh");
 			
-			synchronized(currentDB) {
-				String res = String.join(" ", lines);
-				if (!currentDB.equals(res))
-					currentDB = res;
+			synchronized(currentDBs) {
+				currentDBs.clear();
+				for (String line : lines)
+					if (line.length()>=4)
+					    currentDBs.add(line);
 			}
-	        		
-			System.out.println(currentDB);
+			System.out.println(Arrays.toString(currentDBs.toArray()));		
+			chooseProxy();
+			
 		}	
 	}, 0, Utils.DBMS_REFRESH);
 		
