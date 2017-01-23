@@ -14,7 +14,7 @@ public class Server {
     private static DBProxy actingProxy = null;
     private static final int myPort = 5555;
     private static final Timer myTimer = new Timer();
-    private static List<String> currentDBs = null;
+    private static List<String> currentDBs = new ArrayList<String>();
     
     private static List<DBProxy> proxies = new ArrayList<DBProxy>() {
         {
@@ -23,6 +23,7 @@ public class Server {
         	add(new MongoProxy("root", "root","mongo"));
         }
     };
+    
     
     private static void chooseProxy() {
     	actingProxy = null;
@@ -56,8 +57,7 @@ public class Server {
     }
     
 	public static void main(String[] args) throws IOException {
-		
-		
+			
     DatagramSocket serverSocket = new DatagramSocket(myPort); 
 	byte[] receiveData = new byte[1024];
 	byte[] sendData = new byte[1024];
@@ -69,16 +69,15 @@ public class Server {
 		new TimerTask() {
 		@Override
 		public void run() {
-			String [] lines = Utils.execCommand("/chooseDBMS.sh");
+			List<String> services = Utils.availableServices();
 			
 			synchronized(currentDBs) {
 				currentDBs.clear();
-				for (String line : lines)
-					if (line.length()>=4)
-					    currentDBs.add(line);
+				currentDBs.addAll(services);
 			}
+				
 			System.out.println(Arrays.toString(currentDBs.toArray()));		
-			chooseProxy();
+			//chooseProxy();
 			
 		}	
 	}, 0, Utils.DBMS_REFRESH);

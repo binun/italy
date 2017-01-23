@@ -1,12 +1,46 @@
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class Utils {
 	
 	public static final int DBMS_REFRESH = 5000; //milliseconds
+	//public static Integer [] ports = {3306,27017,7199,7000,7001,9160,9042};
+	public static Integer [] ports = {3306,27017};
+    public static String prefixIP = "172.17.0.";
+    public static int startReplica = 4;
+	
+	public static boolean portIsOpen(String ip, int port) {
+		int timeout = 200;
+        try {
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(ip, port), timeout);
+            socket.close();
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+	
+	public static List<String> availableServices() {
+		ArrayList<String> services = new ArrayList<String>();
+		for (Integer port : ports) {
+			for (int r = 0; r < 10; r++) {
+				String ip = prefixIP + ((Integer)(startReplica+r)).toString();
+				if (Utils.portIsOpen(ip, port)) {
+					services.add(ip+":"+port);
+					System.out.print(ip + ":" + port + " responds");
+				}
+			}
+			System.out.println("");
+		}
+		return services;
+	}
 	
 	public static String [] getReplicaIPs(String hostsFile) {
 		String strLine;
