@@ -1,41 +1,232 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ColumnDefinitions;
+import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.exceptions.CodecNotFoundException;
 
 // https://github.com/datastax/java-driver/tree/3.x/manual
 // https://www.tutorialspoint.com/cassandra/cassandra_read_data.htm
 
 public class CasMain {
-	public static void main(String[] args) {
-		
-		
-		String serverIP = "172.17.0.2";
-		String keyspace = "system";
+	
+	private static String serverIP = "172.17.0.2";
+	private static String keyspace = "system";
+	private static String table = "local";
+	
 
-		Cluster cluster = Cluster.builder().addContactPoints(serverIP).build();
-
-		Session session = cluster.connect(keyspace);
+	public static List<List<String>> fetch(String ip, String db, String table) {
 		
-		String cqlStatement = "SELECT * FROM local";
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(db);
+        List<List<String>> res = new ArrayList<List<String>>();
+		String cqlStatement = String.format("SELECT * FROM %s.%s", db,table);
 		ResultSet rs = session.execute(cqlStatement);
 		//Row row = rs.one();
-		System.out.println(rs.all());
+		List<Row> rows = rs.all();
+		
+		List<Definition> cd = rows.get(0).getColumnDefinitions().asList();
+		for (Row r: rows) {
+		  ArrayList<String> data = new ArrayList<String>();
+	      for (Definition d : cd) 
+            { 
+	    	  String temp = "";
+	    	  try {
+	    		  temp = r.getString(d.getName());
+	    	  }
+	    	  catch (CodecNotFoundException e) {
+	    		  continue;
+	    	  }
+	    	  data.add(temp);
+	    	  //System.out.print(r.getString(d.getName()) + " "); 
+	    	  
+	    	}
+	      res.add(data);
+	      System.out.println("");
+		}
+		
+		session.close();
+		cluster.close();
+		
+		return res;
+	}
+	
+	public static boolean createDB(String ip, String dbname) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect("system");
+		boolean res = false;
+		
+		String query = "CREATE KEYSPACE " +  dbname + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
+		try {
+			session.execute(query);
+			session.execute("USE " + dbname);
+			res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;
+	}
+	
+	public static boolean createTable(String ip, String dbname, String tbname) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+		
+		String query= "CREATE TABLE " + tbname + "(id int PRIMARY KEY, name text);";
+		try {
+		   session.execute(query);
+		   System.out.println("Table created");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;	
+	}
+	
+	public static boolean deleteTable(String ip, String dbname, String tbname) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+		
+		String query= "DROP TABLE " + tbname + ";";
+		try {
+		   session.execute(query);
+		   System.out.println("Table dropped");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;	
+	}
+	
+	public static boolean addRow(String ip, String dbname, String tbname, String [] values) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+	    
+		String query = String.format("INSERT INTO %d.%d(id,name) VALUES(%s,'%s');", dbname,tbname,values[0],values[1]); 
+		try {
+		   session.execute(query);
+		   System.out.println("Data added");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;	
+	}
+	
+	public static boolean updateRow(String ip, String dbname, String tbname, String [] values) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+	
+		String query = String.format("UPDATE %d.%d SET id=%s,name='%s');", dbname,tbname,values[0],values[1]); 
+		try {
+		   session.execute(query);
+		   System.out.println("Data updated");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;	
+	}
+	
+	public static boolean deleteRow(String ip, String dbname, String tbname, String key) {
+		Cluster cluster = Cluster.builder().addContactPoints(ip).build();
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+	
+		String query = String.format("DELETE FROM %d.%d WHERE id=%s;", dbname,tbname,key); 
+		try {
+		   session.execute(query);
+		   System.out.println("Data deleted");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    cluster.close();
+		}
+		return res;	
+	}
+	
+	public static void main(String[] args) {
+		
+		List<List<String>> s = fetch(serverIP, keyspace,table);
+		for (List<String> g : s)
+			System.out.println(g);
+		
+		boolean b = createDB(serverIP,"MySpace");
+		boolean b1 = createTable(serverIP, "MySpace","MyTable");
+		String [] row = {"1","nc1"};
+		boolean b2 = addRow(serverIP, "MySpace","MyTable", row);
+		
+		String [] row1 = {"2","nc2"};
+		boolean b3 = updateRow(serverIP, "MySpace","MyTable", row1);
+		
+		boolean b4 = deleteRow(serverIP, "MySpace","MyTable", "2");
+		
+		boolean b5 = deleteTable(serverIP, "MySpace","MyTable");
+		
+		//Cluster cluster = Cluster.builder().addContactPoints(serverIP).build();
+
+		//Session session = cluster.connect(keyspace);
+		
+		// cqlStatement = "SELECT * FROM local";
+		// rs = session.execute(cqlStatement);
+		//Row row = rs.one();
+		//System.out.println(rs.all());
 		
 		//String query = "CREATE KEYSPACE MySpace WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		//session.execute(query);
 		//session.execute("USE MySpace");
 		//System.out.println("Keyspace created"); 
 		
-		Session session1 = cluster.connect("MySpace");
+		//Session session1 = cluster.connect("MySpace");
 		
 		//String cmd= "CREATE TABLE MyTable(id int PRIMARY KEY, name text);";
 		//session1.execute(cmd);
 		//System.out.println("Table created");
 		
-		String data1 = "INSERT INTO MySpace.MyTable(id,name) VALUES(1,'ram');";
-        session.execute(data1);	        
-        System.out.println("Data created");
+		//String data1 = "INSERT INTO MySpace.MyTable(id,name) VALUES(1,'ram');";
+        //session.execute(data1);	        
+       // System.out.println("Data created");
         
         
 		/*
