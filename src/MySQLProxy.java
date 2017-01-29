@@ -17,75 +17,96 @@ public class MySQLProxy extends DBProxy {
 		this.username = username;
 		this.password = password;
 		this.driver = driver;
+		columns = "id int not null, name varchar(20) not null,primary key(id)";
 	}
 	@Override
-	public void connect(String hostName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	public boolean connect(String hostName)  {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
+		boolean res = false;
 		if (connected)
-			return ;
+			return true;
 		
 		System.out.println("MySQL JDBC Connection");
-        Class.forName(driver).newInstance();
+        try {
+			Class.forName(driver).newInstance();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return false;
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return false;
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return false;
+		}
 		
         
 		System.out.println("MySQL JDBC Driver Registered!");
 		//String connStr = String.format("jdbc:mysql://%s:%d/%s", hostName,port,startDB); 
 		String driverKind = driver.split(".")[1];
 		String connStr = String.format("jdbc:%s://%s:%d/%s", driverKind, hostName,port,startDB); 
-		connection = DriverManager.getConnection(connStr,username, password);
+		try {
+			connection = DriverManager.getConnection(connStr,username, password);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return false;
+		}
 		
 		connected = true;
-	
+	    return true;
 		
 	}
 
 	@Override
-	public Object createDB(String dbName) {
+	public boolean createDB(String dbName) {
 		Statement st;
 		int result;
+		
 		try {
 			st = (Statement) connection.createStatement();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return null;
+			return false;
 		}
 		try {
 			result=st.executeUpdate("CREATE DATABASE " + dbName);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return null;
+			return false;
 		}
-		lastDB = (Object)dbName;
-		return lastDB;
+		
+		return true;
 	}
 
 	@Override
-	public Object createTable(String tbName, String columns) {
+	public boolean createTable(String dbname,String tbName) {
 		Statement st;
-		int result;
 		try {
 			st = (Statement) connection.createStatement();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return null;
+			return false;
 		}
 		try {
-			result=st.executeUpdate(String.format("CREATE TABLE %s.%s(%s)", (String)lastDB,tbName,columns));
-					
+			st.executeUpdate(String.format("CREATE TABLE %s.%s(%s)", dbname,tbName,columns));		
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return null;
+			return false;
 		}
-		lastTable = (Object)tbName;
-		return lastTable;
+		
+		return true;
 	}
 
 	@Override
-	public void addTuple(String[] values) {
+	public boolean addTuple(String dbname,String tbName,String[] values) {
 		System.out.println("Inserting records into the table...");
 		Statement st = null;
 		try {
@@ -93,24 +114,24 @@ public class MySQLProxy extends DBProxy {
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-			return;
+			return false;
 		}
 	      
 		String joined = Utils.join(",", values);
-	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", (String)lastDB,(String)lastTable,joined);
+	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", dbname,tbName,joined);
 	                  
 	    try {
 			st.executeUpdate(sql);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return ;
+			//e.printStackTrace();
+			return false;
 		}
-	
+	    return true;
 	}
 
 	@Override
-	public void rmTuple(String filter) {
+	public boolean rmTuple(String dbname,String tbName, String filter) {
 		System.out.println("Removing records from the table...");
 		Statement st = null;
 		try {
@@ -118,49 +139,35 @@ public class MySQLProxy extends DBProxy {
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-			return;
+			return false;
 		}
 	      
 		
-	    String sql = String.format("DELETE FROM %s.%s WHERE %s", this.lastDB,this.lastTable,filter);
+	    String sql = String.format("DELETE FROM %s.%s WHERE id=%s", dbname,tbName,filter);
 	                  
 	    try {
 			st.executeUpdate(sql);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return ;
+			return false;
 		}
+	    return true;
 	}
+	
 	@Override
-	public Object createTable(String tbName) {
-		String columnDef = "";
-		
-		for (int i=0; i < columns.length; i++) {
-			columnDef = columnDef + columns[i] + " int";
-			if (i!=columns.length-1)
-				columnDef = columnDef + ",";
-		}
-	   		
-		return this.createTable(tbName, columnDef);
-	}
-	@Override
-	public Object createTable(String dbName, String tbName, String columns) {
-		// TODO Auto-generated method stub
-		lastDB = dbName;
-		return this.createTable(tbName, columns);
-	}
-	@Override
-	public String getContent(String dbName, String tbName) {
-		String query = String.format("select %s from %s.%s;", Utils.join(",",this.columns), dbName,tbName);
+	public String fetch(String dbName, String tbName) {
+		String query = String.format("select * from %s.%s;", dbName,tbName);
 		Statement st = null;
 		String result = "";
+		String [] cols = {"id","name"};
 		try {
 		     st = (Statement) connection.createStatement();
 		     ResultSet rs = st.executeQuery(query);
 		     while (rs.next())
 		     {
-		      for (String col: this.columns)
+		    	 
+		      for (String col: cols)
 		    	 result = result + " " + rs.getString(col);
 		     }  
 		     st.close();
@@ -173,13 +180,38 @@ public class MySQLProxy extends DBProxy {
 		 return result;
 	}
 	@Override
-	public void disconnect() {
+	public boolean disconnect() {
 		if (connection != null) {
 	        try {
 	            connection.close();
 	        } catch (Exception e) { /* ignored */}
 	    }
+		return connected;
 		
+	}
+	@Override
+	public boolean deleteTable(String dbName,String tbName) {
+		  System.out.println("Deleting table in given database...");
+		  Statement stmt = null;
+	      try {
+			stmt = connection.createStatement();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return false;
+		}
+	      
+	      String sql = "DROP TABLE " + dbName + "." + tbName;
+	 
+	      try {
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	      System.out.println("Table  deleted in given database...");
+		return true;
 	}
 
 }

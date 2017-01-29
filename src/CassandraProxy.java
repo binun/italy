@@ -1,146 +1,191 @@
 
-import java.sql.Statement;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.exceptions.AuthenticationException;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.datastax.driver.core.ColumnDefinitions.Definition;
+import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.exceptions.CodecNotFoundException;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraProxy extends DBProxy {
 	
 	private Cluster cluster;
 	private Session session;
-	String hostname = "127.0.0.1";
-	
-	public CassandraProxy() {
+	private boolean connected = false;
+    
+    public CassandraProxy() {
+		super(7000, "system");
+		columns = "id int PRIMARY KEY, name text";
+	}
+    
+	@Override
+	public boolean connect(String host) {
+		if (connected)
+			return true;
+		
+		session = cluster.connect();
+		
+		if (session!=null)
+			return true;
+		else return false;
+	}
+
+	@Override
+	public boolean createDB(String dbName) {
+		Session session = cluster.connect(this.startDB);
+		boolean res = false;
+		String query = "CREATE KEYSPACE " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		try {
-			Class.forName("org.apache.cassandra.cql.jdbc.CassandraDriver");
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			session.execute(query);
+			session.execute("USE " + dbName);
+			System.out.println("DB created");
+			res = true;
+		}
+		catch (Exception e) {
 			
 		}
-		cluster = Cluster.builder().addContactPoint(hostname).build();
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+
+		return res;
 	}
 
 	@Override
-	public boolean connect(String replicaName) {
+	public boolean createTable(String dbname,String tbName) {
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+		String query= String.format("CREATE TABLE %s(%s);", tbName, columns);
 		try {
-		     session = cluster.connect();
+		   session.execute(query);
+		   System.out.println("Table created");
+		   res = true;
+		}
+		catch (Exception e) {
 		}
 		
-		catch (NoHostAvailableException e) {
-			return false;
+		finally {
+			session.close();
+		    //cluster.close();
 		}
-		
-		catch (AuthenticationException e) {
-			return false;
-		}
-		
-		catch (IllegalStateException e) {
-			return false;
-		}
-		
-		return true;
-	}
-
-	@Override
-	public Object createDB(String dbName) {
-		String query = "CREATE KEYSPACE IF NOT EXISTS \""+ dbName +"\"" +
-				"WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};";
-        return session.execute(query);
-	}
-
-	@Override
-	public Object createTable(String dbName, String tbName, String columns) {
-		
-		lastDB = dbName;
-		return this.createTable(tbName, columns);
-	}
-
-	@Override
-	public Object createTable(String tbName, String columns) {
-		String query = String.format("CREATE TABLE %s.%s(%s)", (String)lastDB,tbName,columns);
-		ResultSet rs = session.execute(query);
-		lastTable = (Object)tbName;
-		return lastTable;
+		return res;
 		
 	}
 
 	@Override
-	public Object createTable(String tbName) {
-		String columnDef = "";
-		
-		for (int i=0; i < columns.length; i++) {
-			columnDef = columnDef + columns[i] + " int";
-			if (i!=columns.length-1)
-				columnDef = columnDef + ",";
-		}
-	   		
-		return this.createTable(tbName, columnDef);
-	}
-
-	@Override
-	public void addTuple(String[] values) {
+	public boolean addTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Inserting records into the table...");
 		Statement st = null;
+		boolean res = false;
 		
 		String joined = Utils.join(",", values);
-	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", (String)lastDB,(String)lastTable,joined);
+	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", dbname,tbname,joined);
 	                  
 	    try {
 			session.execute(sql);
+			res = true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return;
 		}
-
+      return res;
 	}
 
 	@Override
-	public void rmTuple(String filter) {
+	public boolean rmTuple(String dbname, String tbname, String filter) {
 		System.out.println("Removing records from the table...");
 		Statement st = null;
+		boolean res = false;
 		
-		
-	    String sql = String.format("DELETE FROM %s.%s WHERE %s", this.lastDB,this.lastTable,filter);
+	    String sql = String.format("DELETE FROM %s.%s WHERE id=%s", dbname,tbname,filter);
 	                  
 	    try {
 			session.execute(sql);
+			res = true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return ;
+			//e.printStackTrace();
 		}
+	    
+	    return res;
 	}
 
 	@Override
-	public String getContent(String dbName, String tbName) {
-		String query = String.format("select %s from %s.%s;", Utils.join(",",this.columns), dbName,tbName);
+	public String fetch(String dbname, String tbname) {
+		//String query = String.format("select * from %s.%s;",dbname,tbname);
+		Session session = cluster.connect(dbname);
+        List<List<String>> res = new ArrayList<List<String>>();
+		//String cqlStatement = String.format("SELECT * FROM %s.%s", db,table);
+        Statement stmt = QueryBuilder.select().all().from(tbname);
+		ResultSet rs = session.execute(stmt);
+		//Row row = rs.one();
+		List<Row> rows = rs.all();
 		
-		String result = "";
+		List<Definition> cd = rows.get(0).getColumnDefinitions().asList();
+		for (Row r: rows) {
+		  ArrayList<String> data = new ArrayList<String>();
+	      for (Definition d : cd) 
+            { 
+	    	  String temp = "";
+	    	  try {
+	    		  temp = r.getString(d.getName());
+	    	  }
+	    	  catch (CodecNotFoundException e) {
+	    		  continue;
+	    	  }
+	    	  data.add(temp);
+	    	  //System.out.print(r.getString(d.getName()) + " "); 
+	    	  
+	    	}
+	      res.add(data);
+	      System.out.println("");
+		}
+		
+		session.close();
+		//cluster.close();
+		
+		//return res;
+		String encoded = "";
+		for (List<String> row : res) {
+			for (String value: row)
+				encoded = encoded + value + " ";
+			encoded = encoded + ";\n";
+		}
+		return encoded;	
+	}
+
+	@Override
+	public boolean disconnect() {
+		cluster.close();
+		return true;
+		
+	}
+	@Override
+	public boolean deleteTable(String dbname,String tbname) {
+		Session session = cluster.connect(dbname);
+		boolean res = false;
+		
+		String query= "DROP TABLE " + tbname + ";";
 		try {
-		     
-		     ResultSet rs = session.execute(query);
-		     List<Row> al = rs.all();
-		     for (Row row: al)
-		     {
-		      int rowSize = row.getColumnDefinitions().size();
-		      for (int i=0; i < rowSize; i++)
-		         result = result + " " + row.getString(i);
-		     }  
-		    
-		  }
-		  catch (Exception e)
-		  {
-		    System.err.println("Got an exception! ");
-		    System.err.println(e.getMessage());
-		  }
-		 return result;
+		   session.execute(query);
+		   System.out.println("Table dropped");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+		return res;	
 	}
 
 }

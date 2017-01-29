@@ -16,7 +16,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /sbin/entrypoint.sh
+COPY clearState.sh /clearState.sh
 RUN chmod 0777 /sbin/entrypoint.sh
+RUN chmod 0777 /clearState.sh
 
 EXPOSE 3306
 VOLUME ["${MYSQL_DATA_DIR}", "${MYSQL_RUN_DIR}"]

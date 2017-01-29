@@ -21,6 +21,8 @@ RUN apt-get update -y apt-get install -y cassandra=2.0.10 dsc20=2.0.10-1
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
+COPY clearState.sh /clearState.sh
+RUN chmod 0777 /clearState.sh
 # Run base config script
 ADD scripts/config-cassandra-base.sh /usr/local/bin/config-cassandra-base
 RUN /usr/local/bin/config-cassandra-base
