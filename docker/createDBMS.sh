@@ -24,5 +24,5 @@ source ./platforms.sh
 docker run --name vm-mariadb --publish-all=true -d image-mariadb
 docker run --name vm-mysql --publish-all=true -d image-mysql
 docker run --name vm-mongodb --publish-all=true -d image-mongodb
-
+docker run --name vm-cassandra --publish-all=true -d image-cassandra
 

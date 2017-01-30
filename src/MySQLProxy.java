@@ -8,51 +8,55 @@ import java.sql.Statement;
 public class MySQLProxy extends DBProxy {
   
     private Connection connection = null;
+    private String driverKind = "";
+    String [] cols = new String[2];
     
 	// MySQLProxy("debian-sys-maint", "","com.mysql.jdbc.Driver")
 	// MySQLProxy("root", "root","org.mariadb.jdbc.Driver")
-	public MySQLProxy(String username, String password, String driver) {
+	public MySQLProxy(String driver) {
 		
 		super(3306, "information_schema");
-		this.username = username;
-		this.password = password;
-		this.driver = driver;
-		columns = "id int not null, name varchar(20) not null,primary key(id)";
+		columns = "id int, name varchar(20),primary key(id)";
+		driverKind = driver.split(".")[1];
+		
+		if (driver.equalsIgnoreCase("mariadb")) {
+			this.username = "root";
+			this.password = "root";
+		}
+		
+        if (driver.equalsIgnoreCase("mysql")) {
+        	this.username = "debian-sys-maint";
+    		this.password = "";
+		}	
+        
+       String[] r = columns.split(",");
+       cols[0] = r[0].split(" ")[0];
+       cols[1] = r[1].split(" ")[0];
 	}
 	@Override
 	public boolean connect(String hostName)  {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
-		boolean res = false;
+
 		if (connected)
 			return true;
 		
 		System.out.println("MySQL JDBC Connection");
         try {
 			Class.forName(driver).newInstance();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
+		} catch (Exception e) {
+			
 			return false;
 		}
 		
         
 		System.out.println("MySQL JDBC Driver Registered!");
 		//String connStr = String.format("jdbc:mysql://%s:%d/%s", hostName,port,startDB); 
-		String driverKind = driver.split(".")[1];
+	
 		String connStr = String.format("jdbc:%s://%s:%d/%s", driverKind, hostName,port,startDB); 
 		try {
 			connection = DriverManager.getConnection(connStr,username, password);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			
 			return false;
 		}
 		
@@ -113,7 +117,7 @@ public class MySQLProxy extends DBProxy {
 			st = (Statement) connection.createStatement();
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
 			return false;
 		}
 	      
@@ -138,7 +142,7 @@ public class MySQLProxy extends DBProxy {
 			st = (Statement) connection.createStatement();
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
 			return false;
 		}
 	      
@@ -160,7 +164,7 @@ public class MySQLProxy extends DBProxy {
 		String query = String.format("select * from %s.%s;", dbName,tbName);
 		Statement st = null;
 		String result = "";
-		String [] cols = {"id","name"};
+		//String [] cols = {"id","name"};
 		try {
 		     st = (Statement) connection.createStatement();
 		     ResultSet rs = st.executeQuery(query);
@@ -193,11 +197,12 @@ public class MySQLProxy extends DBProxy {
 	public boolean deleteTable(String dbName,String tbName) {
 		  System.out.println("Deleting table in given database...");
 		  Statement stmt = null;
+		  
 	      try {
 			stmt = connection.createStatement();
-		} catch (SQLException e1) {
+		} catch (Exception e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
 			return false;
 		}
 	      
@@ -207,10 +212,10 @@ public class MySQLProxy extends DBProxy {
 			stmt.executeUpdate(sql);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 			return false;
 		}
-	      System.out.println("Table  deleted in given database...");
+	    System.out.println("Table  deleted in given database...");
 		return true;
 	}
 

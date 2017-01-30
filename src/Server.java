@@ -18,9 +18,10 @@ public class Server {
     
     private static List<DBProxy> proxies = new ArrayList<DBProxy>() {
         {
-        	add(new MySQLProxy("debian-sys-maint", "","com.mysql.jdbc.Driver"));
-        	add(new MySQLProxy("root", "root","org.mariadb.jdbc.Driver"));
-        	add(new MongoProxy("root", "root","mongo"));
+        	add(new MySQLProxy("com.mysql.jdbc.Driver"));
+        	add(new MySQLProxy("org.mariadb.jdbc.Driver"));
+        	add(new MongoProxy());
+        	add(new CassandraProxy());
         }
     };
     

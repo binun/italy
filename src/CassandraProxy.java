@@ -30,15 +30,13 @@ public class CassandraProxy extends DBProxy {
 		
 		session = cluster.connect();
 		
-		if (session!=null)
-			return true;
-		else return false;
+		return (session!=null);
 	}
 
 	@Override
 	public boolean createDB(String dbName) {
 		Session session = cluster.connect(this.startDB);
-		boolean res = false;
+		res = false;
 		String query = "CREATE KEYSPACE " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		try {
 			session.execute(query);
@@ -47,7 +45,7 @@ public class CassandraProxy extends DBProxy {
 			res = true;
 		}
 		catch (Exception e) {
-			
+	
 		}
 		finally {
 			session.close();
@@ -60,14 +58,15 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean createTable(String dbname,String tbName) {
 		Session session = cluster.connect(dbname);
-		boolean res = false;
 		String query= String.format("CREATE TABLE %s(%s);", tbName, columns);
+		res = false;
 		try {
 		   session.execute(query);
 		   System.out.println("Table created");
 		   res = true;
 		}
 		catch (Exception e) {
+
 		}
 		
 		finally {
@@ -81,18 +80,16 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean addTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Inserting records into the table...");
-		Statement st = null;
-		boolean res = false;
-		
 		String joined = Utils.join(",", values);
 	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", dbname,tbname,joined);
-	                  
+	    res = false;               
 	    try {
 			session.execute(sql);
 			res = true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+		
 		}
       return res;
 	}
@@ -100,19 +97,15 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean rmTuple(String dbname, String tbname, String filter) {
 		System.out.println("Removing records from the table...");
-		Statement st = null;
-		boolean res = false;
-		
-	    String sql = String.format("DELETE FROM %s.%s WHERE id=%s", dbname,tbname,filter);
-	                  
+		String sql = String.format("DELETE FROM %s.%s WHERE id=%s", dbname,tbname,filter);
+	    res = false;             
 	    try {
 			session.execute(sql);
-			res = true;
+		    return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//e.printStackTrace();
 		}
-	    
+	   
 	    return res;
 	}
 
@@ -169,22 +162,22 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean deleteTable(String dbname,String tbname) {
 		Session session = cluster.connect(dbname);
-		boolean res = false;
-		
 		String query= "DROP TABLE " + tbname + ";";
+		res = false;
 		try {
 		   session.execute(query);
 		   System.out.println("Table dropped");
 		   res = true;
 		}
 		catch (Exception e) {
-			res = false;
+
 		}
 		
 		finally {
 			session.close();
 		    //cluster.close();
 		}
+
 		return res;	
 	}
 

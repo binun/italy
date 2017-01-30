@@ -14,20 +14,21 @@ public class MongoProxy extends DBProxy {
     private DB curDB;
     private DBCollection curTable;
     
-    public MongoProxy(String username, String password, String driver) {
+    public MongoProxy() {
     	
     	super(27017, "information_schema");
-    	this.username = username;
-		this.password = password;
-		this.driver = driver;
+    	this.username = "";
+		this.password = "";
+		this.driver = "";
 		this.columns = "id name";
     }
 	@Override
 	public boolean connect(String hostName)  {
 		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
-		boolean res = false;
+		res = false;
 		if (connected)
 			return true;
+		
 		System.out.println("Mongo DB Connection");
 		try {
 			connection = new MongoClient(hostName, port);
@@ -35,7 +36,6 @@ public class MongoProxy extends DBProxy {
 			res = true;
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		 
 	   return res;	
@@ -58,14 +58,17 @@ public class MongoProxy extends DBProxy {
 			curDB = connection.getDB(dbname);
 		
 		curTable = curDB.getCollection(tbName);
-		return true;
+		return (curTable!=null);
 	}
 
 	@Override
 	public boolean addTuple(String dbname, String tbName, String[] values) {
 		
-		if (curDB.getName().contains(dbname)==false || curTable.getName().contains(tbName)==false)
-			return false;
+		if (curDB.getName().equals(dbname)==false)
+			curDB = connection.getDB(dbname);
+		
+		if (curTable.getName().equals(tbName)==false)
+			curTable = curDB.getCollection(tbName);
 		
 		BasicDBObject document = new BasicDBObject();
 		
@@ -81,7 +84,7 @@ public class MongoProxy extends DBProxy {
 
 	@Override
 	public boolean rmTuple(String dbName, String tbName,String filter) {
-	       DBObject query = BasicDBObjectBuilder.start().add("id", Integer.valueOf(filter)).get();
+	       DBObject query = BasicDBObjectBuilder.start().add("id", filter).get();
  
            curTable.remove(query);
            return true;
@@ -108,7 +111,9 @@ public class MongoProxy extends DBProxy {
 		if (connection != null) {
 	        try {
 	            connection.close();
-	        } catch (Exception e) { /* ignored */}
+	        } catch (Exception e) {
+	        	return false;
+	        	}
 	    }
 		return true;
 		
