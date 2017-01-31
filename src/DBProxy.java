@@ -23,11 +23,19 @@ public abstract class DBProxy {
   public int getPort() { return port; }
   
   protected Object runCommand(String query) {
+	  
+	if (!connected)
+		return null;
+	
 	String [] parsed = query.split(" ");
 	String dbname = parsed[1];
 	
 	if (parsed[0].equals("createDB")) {
 		return new Boolean(createDB(dbname));
+	}
+	
+	if (parsed[0].equals("deleteDB")) {
+		return new Boolean(deleteDB(dbname));
 	}
 	
     if (parsed[0].equals("createTable")) {
@@ -44,6 +52,15 @@ public abstract class DBProxy {
     	return new Boolean(addTuple(dbname,tbname,args));
 	}
     
+    if (parsed[0].equals("updTuple")) {
+    	String tbname = parsed[2];
+    	String [] args = new String[2];
+    	for (int i = 3; i < parsed.length; i++)
+    		args[i-3] = parsed[i];
+    	
+    	return new Boolean(updateTuple(dbname,tbname,args[0],args[1]));
+	}
+    
     if (parsed[0].equals("rmTuple")) {
     	String tbname = parsed[2];
     	String arg = parsed[3];
@@ -55,6 +72,8 @@ public abstract class DBProxy {
     	String tbname = parsed[2];
 		return new Boolean(deleteTable(dbname,tbname));
 	}
+    
+    
     
     if (parsed[0].equals("fetch")) {
     	String tbname = parsed[2];
@@ -73,6 +92,9 @@ public abstract class DBProxy {
 		for (i = 0; i < commands.length; i++) {
 			Object o = this.runCommand(commands[i]);
 			
+			if (o==null)
+				break;
+			
 			if (o instanceof Boolean) {
 				if (((Boolean)o).booleanValue()==false)
 					break;
@@ -81,6 +103,8 @@ public abstract class DBProxy {
 			if (o instanceof String) {
 				if (((String)o).length()<2)
 					break;
+				else
+					System.out.println((String)o);
 			}
 		}
 		
@@ -95,7 +119,9 @@ public abstract class DBProxy {
   public abstract boolean createTable(String dbName, String tbName);
   public abstract boolean addTuple(String dbName, String tbName,String [] values);
   public abstract boolean rmTuple(String dbName, String tbName,String filter);
+  public abstract boolean updateTuple(String dbName, String tbName,String id, String name);
   public abstract String fetch(String dbName, String tbName);
   public abstract boolean deleteTable(String dbname, String tbname);
+  public abstract boolean deleteDB(String dbName);
   
 }

@@ -16,7 +16,6 @@ public class CassandraProxy extends DBProxy {
 	
 	private Cluster cluster;
 	private Session session;
-	private boolean connected = false;
     
     public CassandraProxy() {
 		super(7000, "system");
@@ -28,8 +27,9 @@ public class CassandraProxy extends DBProxy {
 		if (connected)
 			return true;
 		
-		session = cluster.connect();
-		
+		cluster = Cluster.builder().addContactPoints(host).build();
+		session = cluster.connect(this.startDB);
+		connected=true;
 		return (session!=null);
 	}
 
@@ -37,7 +37,7 @@ public class CassandraProxy extends DBProxy {
 	public boolean createDB(String dbName) {
 		Session session = cluster.connect(this.startDB);
 		res = false;
-		String query = "CREATE KEYSPACE " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
+		String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		try {
 			session.execute(query);
 			session.execute("USE " + dbName);
@@ -58,7 +58,7 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean createTable(String dbname,String tbName) {
 		Session session = cluster.connect(dbname);
-		String query= String.format("CREATE TABLE %s(%s);", tbName, columns);
+		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columns);
 		res = false;
 		try {
 		   session.execute(query);
@@ -80,40 +80,79 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean addTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Inserting records into the table...");
-		String joined = Utils.join(",", values);
-	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", dbname,tbname,joined);
-	    res = false;               
-	    try {
-			session.execute(sql);
-			res = true;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		
+		Session session = cluster.connect(dbname);
+	    
+		//String query = String.format("INSERT INTO %s.%s(id,name) VALUES(%s,\'%s\');", dbname,tbname,values[0],values[1]); 
+		Statement query= QueryBuilder.insertInto(dbname,tbname).value("id",Integer.valueOf(values[0])).value("name",values[1]).ifNotExists();
+	
+		try {
+		   session.execute(query);
+		   System.out.println("Data added");
+		   res = true;
 		}
-      return res;
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+		return res;	
 	}
+	
+	@Override
+	public boolean updateTuple(String dbName, String tbName, String id, String name) {
+		System.out.println("Updating records into the table...");
+		Session session = cluster.connect(dbName);
+	    
+		//String query = String.format("INSERT INTO %s.%s(id,name) VALUES(%s,\'%s\');", dbname,tbname,values[0],values[1]); 
+		Statement query = QueryBuilder.update(dbName,tbName).with(QueryBuilder.set("name", name)).where(QueryBuilder.eq("id",Integer.valueOf(id)));
+		try {
+		   session.execute(query);
+		   System.out.println("Data updated");
+		   res = true;
+		}
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+		return res;	
+	}
+
 
 	@Override
 	public boolean rmTuple(String dbname, String tbname, String filter) {
 		System.out.println("Removing records from the table...");
-		String sql = String.format("DELETE FROM %s.%s WHERE id=%s", dbname,tbname,filter);
-	    res = false;             
-	    try {
-			session.execute(sql);
-		    return true;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		Session session = cluster.connect(dbname);
+	
+		String query = String.format("DELETE FROM %s.%s WHERE id=%s;", dbname,tbname,filter); 
+		try {
+		   session.execute(query);
+		   System.out.println("Data deleted");
+		   res = true;
 		}
-	   
-	    return res;
+		catch (Exception e) {
+			res = false;
+		}
+		
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+		return res;	
 	}
 
 	@Override
 	public String fetch(String dbname, String tbname) {
 		//String query = String.format("select * from %s.%s;",dbname,tbname);
 		Session session = cluster.connect(dbname);
-        List<List<String>> res = new ArrayList<List<String>>();
+		String encoded = "";
+        //List<String> res = new ArrayList<String>();
 		//String cqlStatement = String.format("SELECT * FROM %s.%s", db,table);
         Statement stmt = QueryBuilder.select().all().from(tbname);
 		ResultSet rs = session.execute(stmt);
@@ -122,35 +161,17 @@ public class CassandraProxy extends DBProxy {
 		
 		List<Definition> cd = rows.get(0).getColumnDefinitions().asList();
 		for (Row r: rows) {
-		  ArrayList<String> data = new ArrayList<String>();
-	      for (Definition d : cd) 
-            { 
-	    	  String temp = "";
-	    	  try {
-	    		  temp = r.getString(d.getName());
-	    	  }
-	    	  catch (CodecNotFoundException e) {
-	    		  continue;
-	    	  }
-	    	  data.add(temp);
-	    	  //System.out.print(r.getString(d.getName()) + " "); 
-	    	  
-	    	}
-	      res.add(data);
-	      System.out.println("");
+		  String rowres = r.toString();
+		  
+	      encoded = encoded + rowres.substring(3, rowres.length()) + ";";
+	      //res.add(rowres.substring(4, rowres.length()-1));
+	      //System.out.println("");
+	      
 		}
 		
 		session.close();
-		//cluster.close();
 		
-		//return res;
-		String encoded = "";
-		for (List<String> row : res) {
-			for (String value: row)
-				encoded = encoded + value + " ";
-			encoded = encoded + ";\n";
-		}
-		return encoded;	
+		return encoded;
 	}
 
 	@Override
@@ -181,4 +202,24 @@ public class CassandraProxy extends DBProxy {
 		return res;	
 	}
 
+	@Override
+	public boolean deleteDB(String dbName) {
+		Session session = cluster.connect(this.startDB);
+		res = false;
+		String query = "DROP KEYSPACE " +  dbName;	
+		try {
+			session.execute(query);
+			System.out.println("DB deleted " + dbName);
+			res = true;
+		}
+		catch (Exception e) {
+	
+		}
+		finally {
+			session.close();
+		    //cluster.close();
+		}
+
+		return res;
+	}
 }

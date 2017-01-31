@@ -8,18 +8,21 @@ public class DBMSTest {
 			"fetch myDB myTable",
 			"rmTuple myDB myTable 1",
 			"fetch myDB myTable",
-			"deleteTable myDB myTable"
+			"updTuple myDB myTable 2 name3",
+			"fetch myDB myTable",
+			"deleteTable myDB myTable",
+			"deleteDB myDB"
 	};
 	
 	
 	public static void main(String args[]) throws Exception
 	   {
-		DBProxy dbp1 = new MySQLProxy("com.mysql.jdbc.Driver");
-    	//DBProxy dbp2 = new MySQLProxy("org.mariadb.jdbc.Driver");
-    	//DBProxy dbp3 = new MongoProxy();
-    	//DBProxy dbp4 = new CassandraProxy();
+		DBProxy dbp = new MySQLProxy("com.mysql.jdbc.Driver");
+    	//DBProxy dbp = new MySQLProxy("org.mariadb.jdbc.Driver");
+    	//DBProxy dbp = new MongoProxy();
+    	//DBProxy dbp = new CassandraProxy();
 		
-		dbp1.runScenario("172.17.0.2", scenario);
+		dbp.runScenario("172.17.0.2", scenario);
 	   }
 
 }

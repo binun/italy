@@ -3,6 +3,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 
 
 public class MySQLProxy extends DBProxy {
@@ -17,21 +18,24 @@ public class MySQLProxy extends DBProxy {
 		
 		super(3306, "information_schema");
 		columns = "id int, name varchar(20),primary key(id)";
-		driverKind = driver.split(".")[1];
-		
-		if (driver.equalsIgnoreCase("mariadb")) {
+		this.driver = driver;
+		if (driver.contains("mariadb")) {
+			driverKind="mariadb";
 			this.username = "root";
 			this.password = "root";
 		}
 		
-        if (driver.equalsIgnoreCase("mysql")) {
+        if (driver.contains("mysql")) {
+        	driverKind="mysql";
         	this.username = "debian-sys-maint";
     		this.password = "";
 		}	
         
-       String[] r = columns.split(",");
-       cols[0] = r[0].split(" ")[0];
-       cols[1] = r[1].split(" ")[0];
+       String[] r = columns.split(", ");
+       String [] cd1 = r[0].split(" ");
+       String [] cd2 = r[1].split(" ");
+       cols[0] = cd1[0];
+       cols[1] = cd2[0];
 	}
 	@Override
 	public boolean connect(String hostName)  {
@@ -78,13 +82,13 @@ public class MySQLProxy extends DBProxy {
 			return false;
 		}
 		try {
-			result=st.executeUpdate("CREATE DATABASE " + dbName);
+			result=st.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			return false;
 		}
-		
+		System.out.println("DB created...");
 		return true;
 	}
 
@@ -99,38 +103,50 @@ public class MySQLProxy extends DBProxy {
 			return false;
 		}
 		try {
-			st.executeUpdate(String.format("CREATE TABLE %s.%s(%s)", dbname,tbName,columns));		
+			st.executeUpdate(String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s)", dbname,tbName,columns));		
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			return false;
 		}
-		
+		System.out.println("Table created ...");
 		return true;
 	}
 
 	@Override
 	public boolean addTuple(String dbname,String tbName,String[] values) {
 		System.out.println("Inserting records into the table...");
-		Statement st = null;
-		try {
-			st = (Statement) connection.createStatement();
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			//e1.printStackTrace();
-			return false;
-		}
-	      
-		String joined = Utils.join(",", values);
-	    String sql = String.format("INSERT INTO %s.%s VALUES (%s)", dbname,tbName,joined);
-	                  
+		
+		String sql = String.format("INSERT INTO %s.%s VALUES (?,?)", dbname,tbName);
 	    try {
-			st.executeUpdate(sql);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-		}
+	       PreparedStatement preparedStmt = connection.prepareStatement(sql);
+	       preparedStmt.setInt (1, Integer.valueOf(values[0]));
+	       preparedStmt.setString (2, values[1]);
+	       preparedStmt.execute();
+	    }
+	    catch (Exception e) {
+	    	return false;
+	    }
+	    System.out.println("Tuple added");
+	    return true;
+	}
+	
+	@Override
+	public boolean updateTuple(String dbName, String tbName, String id, String name) {
+       System.out.println("Updating records in the table...");
+		
+		String sql = String.format("UPDATE %s.%s SET NAME=? WHERE ID=?", dbName,tbName);
+	    try {
+	       PreparedStatement preparedStmt = connection.prepareStatement(sql);
+	       
+	       preparedStmt.setString (1, name);
+	       preparedStmt.setInt (2, Integer.valueOf(id));
+	       preparedStmt.execute();
+	    }
+	    catch (Exception e) {
+	    	return false;
+	    }
+	    System.out.println("Tuple modified");
 	    return true;
 	}
 
@@ -156,6 +172,7 @@ public class MySQLProxy extends DBProxy {
 			e.printStackTrace();
 			return false;
 		}
+	    System.out.println("Tuple erased");
 	    return true;
 	}
 	
@@ -215,7 +232,21 @@ public class MySQLProxy extends DBProxy {
 			//e.printStackTrace();
 			return false;
 		}
-	    System.out.println("Table  deleted in given database...");
+	    System.out.println("Table deleted "+ tbName);
+		return true;
+	}
+	@Override
+	public boolean deleteDB(String dbName) {
+		Statement st;
+		try {
+			st = (Statement) connection.createStatement();
+			st.executeUpdate("DROP DATABASE " + dbName);
+			System.out.println("DB deleted "+ dbName);
+		} catch (Exception e) {
+			
+			return false;
+		}
+		
 		return true;
 	}
 
