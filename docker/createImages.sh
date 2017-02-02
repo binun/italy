@@ -13,12 +13,18 @@
    #cd ..
 #done
 
-cd mysql && docker build -t "image-mysql" . && cd ..
+cd cassandr
+cd cassandra-base && docker build -t "cassandra" .
+cd ..
+docker build -t "image-cassandra" cassandra
+cd ..
 
-cd mariadb && docker build -t "image-mariadb" . && cd ..
+#cd mysql && docker build -t "image-mysql" . && cd ..
 
-cd mongodb && docker build -t "image-mongodb" . && cd ..
+#cd mariadb && docker build -t "image-mariadb" . && cd ..
 
-cd cassandr && docker build -t "image-cassandra" cassandra && cd ..
+#cd mongodb && docker build -t "image-mongodb" . && cd ..
 
-cd java8 && docker build -t "image-java" . && cd ..
+#cd cassandr && docker build -t "image-cassandra" cassandra && cd ..
+
+#cd java8 && docker build -t "image-java" . && cd ..
