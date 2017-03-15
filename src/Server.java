@@ -52,6 +52,7 @@ public class Server {
   
     	    List<String> responses = new ArrayList<String>();
     	    
+    	    synchronized(DBMSs) {
     	    for (String dBHost: DBMSs) 
     	    {
     	    	byte[] dataFromDB = new byte[128];
@@ -76,6 +77,7 @@ public class Server {
     	    byte [] data1 = totalResponse.getBytes();
     	    serverSocket.send(new DatagramPacket( data1, data1.length, InetAddress.getByName(clientIP), clientport)); 
     	 }   
+    	}
     }
    
 	public static void main(String[] args) throws IOException, InterruptedException {	

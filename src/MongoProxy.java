@@ -9,6 +9,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
 //http://pingax.com/mongodb-basics-with-java/
+//http://stackoverflow.com/questions/8857276/how-do-i-drop-a-mongodb-database-from-the-command-line
 public class MongoProxy extends DBProxy {
    
 	private MongoClient connection = null;
