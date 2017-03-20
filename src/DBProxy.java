@@ -8,7 +8,7 @@ public abstract class DBProxy {
   
   protected String host;
   protected String startDB;
-  protected String columns;
+  protected String [] colIDs = new String[2];
   protected boolean connected = false;
   protected boolean res = false;
  
@@ -18,6 +18,8 @@ public abstract class DBProxy {
       this.startDB = startDB;
       this.connected = false;
       this.res = false;
+      this.colIDs[0] = "id";
+      this.colIDs[1] = "name";
    }
   
   public int getPort() { return port; }
@@ -70,7 +72,7 @@ public abstract class DBProxy {
     	for (int i = 3; i < parsed.length; i++)
     		args[i-3] = parsed[i];
     	
-    	return new Boolean(updateTuple(dbname,tbname,args[0],args[1]));
+    	return new Boolean(updateTuple(dbname,tbname,args));
 	}
     
     if (parsed[0].equals("rmTuple")) {
@@ -118,7 +120,7 @@ public abstract class DBProxy {
   public abstract boolean createTable(String dbName, String tbName);
   public abstract boolean addTuple(String dbName, String tbName,String [] values);
   public abstract boolean rmTuple(String dbName, String tbName,String filter);
-  public abstract boolean updateTuple(String dbName, String tbName,String id, String name);
+  public abstract boolean updateTuple(String dbName, String tbName,String [] values);
   public abstract String fetch(String dbName, String tbName);
   public abstract boolean deleteTable(String dbname, String tbname);
   public abstract boolean deleteDB(String dbName);

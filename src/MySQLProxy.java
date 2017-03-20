@@ -10,14 +10,16 @@ public class MySQLProxy extends DBProxy {
   
     private Connection connection = null;
     private String driverKind = "";
-    String [] cols = new String[2];
+    private String columnsDef;
+    //String [] cols = new String[2];
     
 	// MySQLProxy("debian-sys-maint", "","com.mysql.jdbc.Driver")
 	// MySQLProxy("root", "root","org.mariadb.jdbc.Driver")
 	public MySQLProxy(String driver) {
 		
 		super(3306, "information_schema");
-		columns = "id int, name varchar(20),primary key(id)";
+		columnsDef = this.colIDs[0] + " int," + this.colIDs[1] + " varchar(20),primary key("+this.colIDs[0] + ")";
+		
 		this.driver = driver;
 		if (driver.contains("mariadb")) {
 			driverKind="mariadb";
@@ -30,12 +32,6 @@ public class MySQLProxy extends DBProxy {
         	this.username = "debian-sys-maint";
     		this.password = "";
 		}	
-        
-       String[] r = columns.split(", ");
-       String [] cd1 = r[0].split(" ");
-       String [] cd2 = r[1].split(" ");
-       cols[0] = cd1[0];
-       cols[1] = cd2[0];
 	}
 	
 	public String toString() {
@@ -108,7 +104,7 @@ public class MySQLProxy extends DBProxy {
 			return false;
 		}
 		try {
-			st.executeUpdate(String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s)", dbname,tbName,columns));		
+			st.executeUpdate(String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s)", dbname,tbName,columnsDef));		
 			System.out.println("MYSQL Table created... " + tbName);
 			return true;
 		} catch (SQLException e) {
@@ -140,15 +136,15 @@ public class MySQLProxy extends DBProxy {
 	}
 	
 	@Override
-	public boolean updateTuple(String dbName, String tbName, String id, String name) {
+	public boolean updateTuple(String dbName, String tbName, String [] values) {
        System.out.println("Updating records in the table...");
 		
 		String sql = String.format("LOCK TABLES %s.%s WRITE;UPDATE %s.%s SET NAME=? WHERE ID=?;UNLOCK TABLES;", dbName,tbName,dbName,tbName);
 	    try {
 	       PreparedStatement preparedStmt = connection.prepareStatement(sql);
 	       
-	       preparedStmt.setString (1, name);
-	       preparedStmt.setInt (2, Integer.valueOf(id));
+	       preparedStmt.setString (1, values[1]);
+	       preparedStmt.setInt (2, Integer.valueOf(values[0]));
 	       preparedStmt.execute();
 	       System.out.println("MYSQL Tuple modified");
 		   return true;
@@ -203,7 +199,7 @@ public class MySQLProxy extends DBProxy {
 		     while (rs.next())
 		     {
 		    	 
-		      for (String col: cols)
+		      for (String col: this.colIDs)
 		    	 result = result + " " + rs.getString(col);
 		     }  
 		     st.close();

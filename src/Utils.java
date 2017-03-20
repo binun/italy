@@ -16,6 +16,7 @@ public class Utils {
 	public static final int DBMS_REFRESH = 5000; //milliseconds
 	//public static Integer [] ports = {3306,27017,7199,7000,7001,9160,9042};
 	public static Integer [] ports = {3306,7000,7001,7199,9042,9160,27017};
+	//public static Integer [] ports = {3306,7000,7001,7199,9042,9160};
     public static String prefixIP = "172.17.0.";
     public static int startReplica = 1;
     public static int DBPORT = 6666;

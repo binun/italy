@@ -53,29 +53,26 @@ public class Server {
     	    List<String> responses = new ArrayList<String>();
     	    
     	    synchronized(DBMSs) {
-    	    for (String dBHost: DBMSs) 
-    	    {
+    	     for (String dBHost: DBMSs) 
+    	     {
     	    	byte[] dataFromDB = new byte[128];
     	    	String dbResponse = "response-" + dBHost;
     	    	
     	    	System.out.printf(" ------> FORWARD %s TO %s\n", sentence,dBHost);
-        	    dbSocket.send(new DatagramPacket( sentence.getBytes(), 
-        	    		                          sentence.getBytes().length, 
-        	    		                          InetAddress.getByName(dBHost), Utils.DBPORT)); 
-        	    //Thread.currentThread().sleep(1000);
         	    
+    	    	dbSocket.send(new DatagramPacket( sentence.getBytes(), sentence.getBytes().length, InetAddress.getByName(dBHost), Utils.DBPORT)); 	    
         	    DatagramPacket dbRespPacket = new DatagramPacket(dataFromDB, dataFromDB.length);
         	    dbSocket.receive(dbRespPacket);
         	    dbResponse = new String( dbRespPacket.getData());
-        	    //Thread.currentThread().sleep(1000);
+        	   
         	    System.out.printf(" <------ RECEIVED %s FROM %s\n", dbResponse, dBHost);
         	    responses.add(dbResponse);
-    	    }
+    	     }
     	    
-    	    Thread.currentThread().sleep(Utils.REPLICA_COLLECT_DELAY);
-    	    String totalResponse = String.join("_", responses);
-    	    byte [] data1 = totalResponse.getBytes();
-    	    serverSocket.send(new DatagramPacket( data1, data1.length, InetAddress.getByName(clientIP), clientport)); 
+    	     Thread.currentThread().sleep(Utils.REPLICA_COLLECT_DELAY);
+    	     String totalResponse = String.join("_", responses);
+    	     byte [] data1 = totalResponse.getBytes();
+    	     serverSocket.send(new DatagramPacket( data1, data1.length, InetAddress.getByName(clientIP), clientport)); 
     	 }   
     	}
     }

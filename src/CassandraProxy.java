@@ -17,15 +17,16 @@ public class CassandraProxy extends DBProxy {
 	
 	private Cluster cluster;
 	private Session session;
+	private String columnDef;
 	
-	private String cqlSh(String command) {
+	private String shellExec(String command) {
 		
 		return "cqlsh -e " + '"'+ command + '"';
 	}
     
     public CassandraProxy() {
 		super(7000, "system");
-		columns = "id int PRIMARY KEY, name text";
+		columnDef = this.colIDs[0] + " int PRIMARY KEY," + this.colIDs[1] + " text";
 	}
     
     public String toString() {
@@ -43,7 +44,7 @@ public class CassandraProxy extends DBProxy {
 		
 		String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		
-        String cmdres = Utils.execCommand(cqlSh(query));
+        String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
@@ -52,9 +53,9 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean createTable(String dbname,String tbName) {
 		
-		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columns);
+		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columnDef);
 		
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
@@ -63,24 +64,24 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean addTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Inserting records into the table...");
-		String query= String.format("INSERT INTO %s.%s(%s) VALUES(%s,%s)", 
-				   dbname, tbname, columns,
-				   values[0],
-				   "'"+values[1]+"'");
+		String query= String.format("INSERT INTO %s.%s(%s,%s) VALUES(%s,%s)", 
+				   dbname, tbname, 
+				   colIDs[0],colIDs[1],
+				   values[0], "'"+values[1]+"'");
 		
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
 	}
 	
 	@Override
-	public boolean updateTuple(String dbname, String tbname, String id, String name) {
+	public boolean updateTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Updating records into the table...");
 		String query= String.format("UPDATE %s.%s SET name=\'%s\' WHERE id=%s;", 
-				   dbname, tbname, name,id);
+				   dbname, tbname, values[0],values[1]);
 		
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
@@ -93,7 +94,7 @@ public class CassandraProxy extends DBProxy {
 		String query= String.format("DELETE FROM %s.%s WHERE id=%s;", 
 				   dbname, tbname, id);
 		
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
@@ -105,7 +106,7 @@ public class CassandraProxy extends DBProxy {
 		String query= String.format("SELECT * FROM %s.%s;", 
 				   dbname, tbname);
 		
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         
 		return cmdres;
 	}
@@ -120,7 +121,7 @@ public class CassandraProxy extends DBProxy {
 	public boolean deleteTable(String dbname,String tbname) {
 
 		String query= "DROP TABLE " + dbname + "." + tbname + ";";
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);
@@ -129,7 +130,7 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public boolean deleteDB(String dbname) {
 		String query= "DROP KEYSPACE " + dbname + ";";
-		String cmdres = Utils.execCommand(cqlSh(query));
+		String cmdres = Utils.execCommand(shellExec(query));
         String remain = cmdres.replaceAll("\\s+","");
         
 		return (remain.length()<2);

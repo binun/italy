@@ -1,4 +1,5 @@
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -10,6 +11,16 @@ import com.mongodb.MongoClient;
 
 //http://pingax.com/mongodb-basics-with-java/
 //http://stackoverflow.com/questions/8857276/how-do-i-drop-a-mongodb-database-from-the-command-line
+
+// printf "use mydb" > test.js
+// printf "use mydb\ndb.createCollection('mytb')" > test.js
+// printf "use mydb\ndb.mydb.insert({id:1,name:'myname'})" > test.js
+// printf "use mydb\ndb.mydb.update({id:1},{id:1,name:'myname2'})" > test.js
+// printf "use mydb\ndb.mydb.find()"
+// printf "use mydb\ndb.mydb.drop()" > test.js 
+// printf "use mydb\ndb.dropDatabase()" > test.js
+// db.mydb.remove({'title':'MongoDB Overview'})
+
 public class MongoProxy extends DBProxy {
    
 	private MongoClient connection = null;
@@ -19,214 +30,137 @@ public class MongoProxy extends DBProxy {
     
     public MongoProxy() {
     	
-    	super(27017, "information_schema");
+    	super(27017, "test");
     	this.username = "";
 		this.password = "";
 		this.driver = "";
-		this.columns = "id name";
-		colNames = columns.split(" ");
     }
     
     public String toString() {
 		return "MongoProxy "; 
 	}
+    
+    private String shellExec(String command) {
+		String res = "printf " + '"'+ command + '"' + " > test.js && cat test.js | mongo";
+		System.out.println(res);
+		return res;
+	}
+    
 	@Override
 	public boolean connect(String hostName)  {
-		//String hostName = DBUtils.execCommand("./docker-ip.sh " + replicaName)[0]; 
-		res = false;
-		if (connected)
-			return true;
-		
-		System.out.println("Mongo DB Connected");
-		try {
-			connection = new MongoClient(hostName, port);
-			connected = true;
-			res = true;
-		} catch (Exception e) {
-			res=false;
-			System.out.println("Mongo DB NOCONNECT " + e.getMessage());
-		}
-		 
-	   return res;	
+		connected=true;
+		return connected;
 	}
 
 	@Override
 	public boolean createDB(String dbName) {
 		
-		try {
-		  curDB = connection.getDB(dbName);	
-	      System.out.println("Mongo DB created " + dbName);
-		  return true;
-		}
-		catch (Exception e) {
-			System.out.println("Mongo DB FAILCREATE " + dbName + " " + e.getMessage());
-			return false;
-		}
+        String query = "use " + dbName;	
+		
+        String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2);
 
 	}
 
 	@Override
 	public boolean createTable(String dbname,String tbName) {
+		// 
+		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.createCollection(''{1}'')");
+		Object[] args = {dbname, tbName};
+		String query = messageFormat.format(args);
 		
-		if (!connected)
-		  return false;
-		
-		try {
-		  curDB = connection.getDB(dbname);
-		  curTable = curDB.getCollection(tbName);
-		  System.out.println("Mongo table created " + tbName);
-		  return true;
-		} 
-		
-		catch (Exception e) {
-			System.out.println("Mongo table FAILCREATE " + tbName+" " + e.getMessage());
-			return false;
-		}
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2);
 
 	}
 
 	@Override
 	public boolean addTuple(String dbname, String tbName, String[] values) {
 		
-		if (curDB.getName().equals(dbname)==false)
-			curDB = connection.getDB(dbname);
+		String query = String.format("use %s\ndb.%s.insert({%s:%s,%s:%s})", 
+				dbname, tbName,this.colIDs[0],values[0],this.colIDs[1],'"'+values[1]+'"');
 		
-		if (curTable.getName().equals(tbName)==false)
-			curTable = curDB.getCollection(tbName);
 		
-		BasicDBObject document = new BasicDBObject();
-		
-		String [] colNames = columns.split(" ");
-				
-		for (int i=0; i < colNames.length; i++) 
-		    document.put(colNames[i], values[i]);
-		
-		try {
-		   curTable.insert(document);
-		   System.out.println("Mongo record added " + tbName);
-		   return true;
-		}
-		catch (Exception e) {
-			System.out.println("Mongo record FAILADD " + tbName + " " + e.getMessage());
-			return false;
-		}
-		
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2);
 		
 	}
 	
 	@Override
-	public boolean updateTuple(String dbName, String tbName, String id, String name) {
+	public boolean updateTuple(String dbName, String tbName, String [] values) {
 		
-		if (curDB.getName().equals(dbName)==false)
-			curDB = connection.getDB(dbName);
+		String query = String.format("use %s\ndb.%s.update({%s:%s},{%s:%s,%s:%s})", 
+				dbName, tbName,
+				this.colIDs[0],values[0],
+				this.colIDs[0],values[0],
+				this.colIDs[1],'"'+values[1]+'"');
 		
-		if (curTable.getName().equals(tbName)==false)
-			curTable = curDB.getCollection(tbName);
-		
-		BasicDBObject newDocument = new BasicDBObject();
-		newDocument.append("$set", new BasicDBObject().append("name", name));
-
-		BasicDBObject searchQuery = new BasicDBObject().append("id", id);
-		
-
-		
-		try {
-		    curTable.update(searchQuery, newDocument);
-		    System.out.println("Mongo record updated " + tbName);
-		    return true;
-		}
-		catch (Exception e) {
-			System.out.println("Mongo record FAILUPDATE " + tbName + " " + e.getMessage());
-		    return false;
-		}
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2);
 	}
 	
 
 	@Override
 	public boolean rmTuple(String dbName, String tbName,String filter) {
-	       DBObject query = BasicDBObjectBuilder.start().add("id", filter).get();
-           
-           try {
-       		curTable.remove(query);
-   		    System.out.println("Mongo record removed " + tbName);
-   		    return true;
-   		   }
-   		   catch (Exception e) {
-   			System.out.println("Mongo record FAILREMOVE " + tbName + " " + e.getMessage());
-   		    return false;
-   		   }
+		
+		String query = String.format("use %s\ndb.%s.remove({%s:%s})", 
+				dbName, tbName,
+				this.colIDs[0],filter);
+		
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2); 
 	}
 	
 	
 	@Override
 	public String fetch(String dbName, String tbName) {
-		String result = "";
-		BasicDBObject searchQuery = new BasicDBObject();
-		//searchQuery.put("name", "mkyong");
-		DBCursor cursor = null;
-
-		try {
-			cursor = curTable.find(searchQuery);
-	
-            while (cursor.hasNext()) {
-			   DBObject dbo = cursor.next();
-			   String tuple="";
-			   for (int i=0; i < colNames.length; i++) {
-				  tuple=tuple+dbo.get(colNames[i]);
-			      if (i<colNames.length-1)
-			         tuple=tuple+" ";
-			    	
-			  }
-			  result = result + "{"+tuple+"}";
-			  //System.out.println(cursor.next());
-		    }
-            System.out.println("Mongo record retrieved " + tbName);
-       	    return result;  
-		}
-     catch (Exception e) {
-    	 System.out.println("Mongo record FAILRETRIEVE " + tbName+ " " + e.getMessage());
-    	 return "empty"; 
-     }
+		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.{1}.drop()");
+		String[] args = {dbName,tbName};
+		String query = messageFormat.format(args);
+		
+		String cmdres = Utils.execCommand(shellExec(query));
+        //String remain = cmdres.replaceAll("\\s+","");
+        
+		return cmdres; 
 	}
 	
 	@Override
 	public boolean disconnect() {
-		if (connection != null) {
-	        try {
-	            connection.close();
-	        } catch (Exception e) {
-	        	return false;
-	        	}
-	    }
+		connected=false;
 		return true;
 		
 	}
 	@Override
 	public boolean deleteTable(String dbname, String tbName) {
-		try {
-		   curTable.drop();
-		   System.out.println("Mongo Dropped table");
-	       return true;
-		}
-		catch (Exception e) {
-			 
-			System.out.println("Mongo DROPTABLEFAIL " + " " + e.getMessage());
-		    return false;
-		}
+		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.{1}.drop()");
+		String[] args = {dbname,tbName};
+		String query = messageFormat.format(args);
 		
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2);  
 	}
 	@Override
 	public boolean deleteDB(String dbName) {
-		try {
-		  connection.dropDatabase(dbName);
-		  System.out.println("Mongo Dropped DB ");
-		}
+		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.dropDatabase()");
+		Object[] args = {dbName};
+		String query = messageFormat.format(args);
 		
-		catch (Exception e) {
-			System.out.println("Mongo DELDBFAIL " + " " + e.getMessage());
-			return false;
-		}
-		return true;
+		String cmdres = Utils.execCommand(shellExec(query));
+        String remain = cmdres.replaceAll("\\s+","");
+        
+		return (remain.length()<2); 
 	}
 	
 }	
