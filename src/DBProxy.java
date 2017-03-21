@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 
 public abstract class DBProxy {
  
@@ -11,6 +14,9 @@ public abstract class DBProxy {
   protected String [] colIDs = new String[2];
   protected boolean connected = false;
   protected boolean res = false;
+
+  Map<String,String> posTraits;
+  Map<String,String> negTraits;
  
   protected DBProxy(int port, String startDB) {
       this.port = port;
@@ -25,36 +31,37 @@ public abstract class DBProxy {
   public int getPort() { return port; }
   public boolean isConnected() { return connected; }
   
-  public Object runCommand(String query) {
+  public String runCommand(String query) {
 	  
+	String result = Utils.FAIL;
 	if (!connected)
-		return "offline";
+		return result;
 	//System.out.println("Executes " + query); 
 	
 	String [] parsed = query.split(" ");
-	String dbname = parsed[1];
+	String dbname = parsed[1];	
 	
 	if (parsed[0].equals("createDB")) {
-		return new Boolean(createDB(dbname));
+		result = createDB(dbname);
 	}
 	
 	if (parsed[0].equals("deleteDB")) {
-		return new Boolean(deleteDB(dbname));
+		result = deleteDB(dbname);
 	}
 	
 	String tbname = parsed[2];
 	
     if (parsed[0].equals("createTable")) {
 		
-		return new Boolean(createTable(dbname,tbname));
+		result = createTable(dbname,tbname);
 	}
     
     if (parsed[0].equals("deleteTable")) {
-		return new Boolean(deleteTable(dbname,tbname));
+		result = deleteTable(dbname,tbname);
 	}
        
     if (parsed[0].equals("fetch")) {
-		return (Object)fetch(dbname,tbname);
+		result = fetch(dbname,tbname);
 	}
     
     String [] args = new String[2];
@@ -64,7 +71,7 @@ public abstract class DBProxy {
     	for (int i = 3; i < parsed.length; i++)
     		args[i-3] = parsed[i];
     	
-    	return new Boolean(addTuple(dbname,tbname,args));
+    	result = addTuple(dbname,tbname,args);
 	}
     
     if (parsed[0].equals("updateTuple")) {
@@ -72,17 +79,35 @@ public abstract class DBProxy {
     	for (int i = 3; i < parsed.length; i++)
     		args[i-3] = parsed[i];
     	
-    	return new Boolean(updateTuple(dbname,tbname,args));
+    	result = updateTuple(dbname,tbname,args);
 	}
     
     if (parsed[0].equals("rmTuple")) {
     	String arg = parsed[3];
     	
-    	return new Boolean(rmTuple(dbname,tbname,arg));
-	}
-	
-	return query;
-	  
+    	result = rmTuple(dbname,tbname,arg);
+    }
+    
+    if (parsed[0].equals("fetch")==false) {
+    	
+    	String [] ptraits = posTraits.get(parsed[0]).split(" ");
+    	String [] ntraits = negTraits.get(parsed[0]).split(" ");
+    	
+    	boolean posPresent = false, negPresent=false;
+    	for (String p: ptraits)
+    		if (result.contains(p))
+    			posPresent = true;
+    	for (String n: ntraits)
+    		if (result.contains(n))
+    			negPresent = true;
+    	
+    	if (posPresent && !negPresent)
+    		result= Utils.OK;
+    	else
+    		result= Utils.FAIL;
+    }
+    
+	return result;
   }
   
   public int runScenario(String host, String [] commands) {
@@ -116,14 +141,14 @@ public abstract class DBProxy {
   
   public abstract boolean connect(String host);
   public abstract boolean disconnect(); 
-  public abstract boolean createDB(String dbName);  
-  public abstract boolean createTable(String dbName, String tbName);
-  public abstract boolean addTuple(String dbName, String tbName,String [] values);
-  public abstract boolean rmTuple(String dbName, String tbName,String filter);
-  public abstract boolean updateTuple(String dbName, String tbName,String [] values);
+  public abstract String createDB(String dbName);  
+  public abstract String createTable(String dbName, String tbName);
+  public abstract String addTuple(String dbName, String tbName,String [] values);
+  public abstract String rmTuple(String dbName, String tbName,String filter);
+  public abstract String updateTuple(String dbName, String tbName,String [] values);
   public abstract String fetch(String dbName, String tbName);
-  public abstract boolean deleteTable(String dbname, String tbname);
-  public abstract boolean deleteDB(String dbName);
+  public abstract String deleteTable(String dbname, String tbname);
+  public abstract String deleteDB(String dbName);
   public boolean online() {return connected; }
   
 }

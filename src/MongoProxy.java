@@ -1,5 +1,7 @@
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -34,6 +36,35 @@ public class MongoProxy extends DBProxy {
     	this.username = "";
 		this.password = "";
 		this.driver = "";
+		
+		posTraits = new HashMap<String, String>()
+		{
+		  {
+			        put("createDB", "ok");
+			        put("deleteDB", "ok");
+			        put("createTable", "ok");
+			        put("deleteTable", "ok");
+			        put("fetch", "ok");
+			        put("addTuple", "ok");
+			        put("updateTuple", "ok");
+			        put("rmTuple", "ok");
+		  }
+	    };
+	    
+	    negTraits = new HashMap<String, String>()
+	    {
+	      {
+	    			put("createDB", "ok");
+	    			put("deleteDB", "ok");
+	    			put("createTable", "ok");
+	    			put("deleteTable", "ok");
+	    			put("fetch", "ok");
+	    			put("addTuple", "ok");
+	    			put("updateTuple", "ok");
+	    			put("rmTuple", "ok");
+	      }
+	    };
+
     }
     
     public String toString() {
@@ -53,47 +84,47 @@ public class MongoProxy extends DBProxy {
 	}
 
 	@Override
-	public boolean createDB(String dbName) {
+	public String createDB(String dbName) {
 		
         String query = "use " + dbName;	
 		
         String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+        return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 
 	}
 
 	@Override
-	public boolean createTable(String dbname,String tbName) {
+	public String createTable(String dbname,String tbName) {
 		// 
 		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.createCollection(''{1}'')");
 		Object[] args = {dbname, tbName};
 		String query = messageFormat.format(args);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 
 	}
 
 	@Override
-	public boolean addTuple(String dbname, String tbName, String[] values) {
+	public String addTuple(String dbname, String tbName, String[] values) {
 		
 		String query = String.format("use %s\ndb.%s.insert({%s:%s,%s:%s})", 
 				dbname, tbName,this.colIDs[0],values[0],this.colIDs[1],'"'+values[1]+'"');
 		
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 		
 	}
 	
 	@Override
-	public boolean updateTuple(String dbName, String tbName, String [] values) {
+	public String updateTuple(String dbName, String tbName, String [] values) {
 		
 		String query = String.format("use %s\ndb.%s.update({%s:%s},{%s:%s,%s:%s})", 
 				dbName, tbName,
@@ -102,23 +133,23 @@ public class MongoProxy extends DBProxy {
 				this.colIDs[1],'"'+values[1]+'"');
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 	}
 	
 
 	@Override
-	public boolean rmTuple(String dbName, String tbName,String filter) {
+	public String rmTuple(String dbName, String tbName,String filter) {
 		
 		String query = String.format("use %s\ndb.%s.remove({%s:%s})", 
 				dbName, tbName,
 				this.colIDs[0],filter);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2); 
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 	}
 	
 	
@@ -141,26 +172,26 @@ public class MongoProxy extends DBProxy {
 		
 	}
 	@Override
-	public boolean deleteTable(String dbname, String tbName) {
+	public String deleteTable(String dbname, String tbName) {
 		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.{1}.drop()");
 		String[] args = {dbname,tbName};
 		String query = messageFormat.format(args);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);  
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 	}
 	@Override
-	public boolean deleteDB(String dbName) {
+	public String deleteDB(String dbName) {
 		MessageFormat messageFormat = new MessageFormat("use {0}\ndb.dropDatabase()");
 		Object[] args = {dbName};
 		String query = messageFormat.format(args);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2); 
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 	}
 	
 }	

@@ -1,6 +1,7 @@
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.datastax.driver.core.Cluster;
@@ -27,6 +28,33 @@ public class CassandraProxy extends DBProxy {
     public CassandraProxy() {
 		super(7000, "system");
 		columnDef = this.colIDs[0] + " int PRIMARY KEY," + this.colIDs[1] + " text";
+		posTraits = new HashMap<String, String>()
+		{
+		  {
+			put("createDB", "ok");
+		    put("deleteDB", "ok");
+			put("createTable", "ok");
+		    put("deleteTable", "ok");
+			put("fetch", "ok");
+			put("addTuple", "ok");
+		    put("updateTuple", "ok");
+			put("rmTuple", "ok");
+		   }
+	     };
+			    
+		negTraits = new HashMap<String, String>()
+	     {
+		   {
+			 put("createDB", "ok");
+			 put("deleteDB", "ok");
+			 put("createTable", "ok");
+			 put("deleteTable", "ok");
+			 put("fetch", "ok");
+			 put("addTuple", "ok");
+			 put("updateTuple", "ok");
+			 put("rmTuple", "ok");
+		    }
+		};
 	}
     
     public String toString() {
@@ -40,29 +68,29 @@ public class CassandraProxy extends DBProxy {
 	}
 
 	@Override
-	public boolean createDB(String dbName) {
+	public String createDB(String dbName) {
 		
 		String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		
         String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+        return cmdres;
+        //String remain = cmdres.replaceAll("\\s+"," ");
+		//return (remain.length()<2);
 	}
 
 	@Override
-	public boolean createTable(String dbname,String tbName) {
+	public String createTable(String dbname,String tbName) {
 		
 		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columnDef);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+","");
+		//return (remain.length()<2);
 	}
 
 	@Override
-	public boolean addTuple(String dbname, String tbname, String [] values) {
+	public String addTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Inserting records into the table...");
 		String query= String.format("INSERT INTO %s.%s(%s,%s) VALUES(%s,%s)", 
 				   dbname, tbname, 
@@ -70,34 +98,34 @@ public class CassandraProxy extends DBProxy {
 				   values[0], "'"+values[1]+"'");
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+        return cmdres;
+		//String remain = cmdres.replaceAll("\\s+",""); 
+		//return (remain.length()<2);
 	}
 	
 	@Override
-	public boolean updateTuple(String dbname, String tbname, String [] values) {
+	public String updateTuple(String dbname, String tbname, String [] values) {
 		System.out.println("Updating records into the table...");
 		String query= String.format("UPDATE %s.%s SET name=\'%s\' WHERE id=%s;", 
 				   dbname, tbname, values[0],values[1]);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+        return cmdres;
+		//String remain = cmdres.replaceAll("\\s+","");    
+		//return (remain.length()<2);
 	}
 
 
 	@Override
-	public boolean rmTuple(String dbname, String tbname, String id) {
+	public String rmTuple(String dbname, String tbname, String id) {
 		System.out.println("Deleting records in the table...");
 		String query= String.format("DELETE FROM %s.%s WHERE id=%s;", 
 				   dbname, tbname, id);
 		
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+        return cmdres;
+		//String remain = cmdres.replaceAll("\\s+","");   
+		//return (remain.length()<2);
 	}
 
 	@Override
@@ -118,21 +146,21 @@ public class CassandraProxy extends DBProxy {
 		
 	}
 	@Override
-	public boolean deleteTable(String dbname,String tbname) {
+	public String deleteTable(String dbname,String tbname) {
 
 		String query= "DROP TABLE " + dbname + "." + tbname + ";";
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+","");    
+		//return (remain.length()<2);
 	}
 
 	@Override
-	public boolean deleteDB(String dbname) {
+	public String deleteDB(String dbname) {
 		String query= "DROP KEYSPACE " + dbname + ";";
 		String cmdres = Utils.execCommand(shellExec(query));
-        String remain = cmdres.replaceAll("\\s+","");
-        
-		return (remain.length()<2);
+		return cmdres;
+        //String remain = cmdres.replaceAll("\\s+","");
+		//return (remain.length()<2);
 	}
 }

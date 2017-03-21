@@ -53,8 +53,8 @@ public class Interceptor {
  	      String response = responses.get(timestamp);
  	      if (response==null) {
  	    	  System.out.println("MUST EXECUTE: " + request);
- 	    	  Object o = actingDB.runCommand(query);
-        	  response = o.toString();
+ 	    	  response = actingDB.runCommand(query);
+        	  
         	  responses.put(timestamp, response);
         	  
  	      }

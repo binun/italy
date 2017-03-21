@@ -21,6 +21,8 @@ public class Utils {
     public static int startReplica = 1;
     public static int DBPORT = 6666;
     public static int REPLICAPORT = 5555;
+    public static final String OK = "OK";
+    public static final String FAIL = "FAIL";
     
     public static final int CLIENT_COLLECT_DELAY = 1000;
     public static final int REPLICA_COLLECT_DELAY = 200;

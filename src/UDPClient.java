@@ -92,7 +92,7 @@ public class UDPClient
 			   }
 	           
        	       String replicaResponse = new String( rpRespPacket.getData());
-       	       System.out.println("  Obtaining " + replicaResponse + " from  " + host);
+       	       //System.out.println("  Obtaining " + replicaResponse + " from  " + host);
 	       }
 	       
 	       Thread.currentThread().sleep(Utils.CLIENT_COLLECT_DELAY);

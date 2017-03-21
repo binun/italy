@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 
 
 public class MySQLProxy extends DBProxy {
@@ -31,7 +32,35 @@ public class MySQLProxy extends DBProxy {
         	driverKind="mysql";
         	this.username = "debian-sys-maint";
     		this.password = "";
-		}	
+		}
+        
+        posTraits = new HashMap<String, String>()
+        {
+          {
+            put("createDB", "ok");
+        	put("deleteDB", "ok");
+            put("createTable", "ok");
+        	put("deleteTable", "ok");
+            put("fetch", "ok");
+            put("addTuple", "ok");
+        	put("updateTuple", "ok");
+            put("rmTuple", "ok");
+          }
+        };
+        	    
+        negTraits = new HashMap<String, String>()
+        {
+          {
+        	put("createDB", "ok");
+        	put("deleteDB", "ok");
+        	put("createTable", "ok");
+        	put("deleteTable", "ok");
+        	put("fetch", "ok");
+        	put("addTuple", "ok");
+        	put("updateTuple", "ok");
+            put("rmTuple", "ok");
+          }
+       };
 	}
 	
 	public String toString() {
@@ -69,7 +98,7 @@ public class MySQLProxy extends DBProxy {
 	}
 
 	@Override
-	public boolean createDB(String dbName) {
+	public String createDB(String dbName) {
 		Statement st;
 	
 		
@@ -78,45 +107,45 @@ public class MySQLProxy extends DBProxy {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return false;
+			return Utils.FAIL;
 		}
 		try {
 			int result=st.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
 			System.out.println("MYSQL DB created... " + dbName);
-			return true;
+			return Utils.OK;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.out.println("MYSQL DB CREATFAILURE... " + dbName);
-			return false;
+			return Utils.FAIL;
 		}
 		
 	}
 
 	@Override
-	public boolean createTable(String dbname,String tbName) {
+	public String createTable(String dbname,String tbName) {
 		Statement st;
 		try {
 			st = (Statement) connection.createStatement();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return false;
+			return Utils.FAIL;
 		}
 		try {
 			st.executeUpdate(String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s)", dbname,tbName,columnsDef));		
 			System.out.println("MYSQL Table created... " + tbName);
-			return true;
+			return Utils.OK;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.out.println("MYSQL Table CREATFAILURE... " + tbName);
-			return false;
+			return Utils.FAIL;
 		}
 	}
 
 	@Override
-	public boolean addTuple(String dbname,String tbName,String[] values) {
+	public String addTuple(String dbname,String tbName,String[] values) {
 		System.out.println("Inserting records into the table...");
 		
 		String sql = String.format("LOCK TABLES %s.%s WRITE; INSERT INTO %s.%s VALUES (?,?);UNLOCK TABLES;", dbname,tbName,dbname,tbName);
@@ -126,17 +155,17 @@ public class MySQLProxy extends DBProxy {
 	       preparedStmt.setString (2, values[1]);
 	       preparedStmt.execute();
 	       System.out.println("MYSQL Tuple added");
-	       return true;
+	       return Utils.OK;
 	    }
 	    catch (Exception e) {
 	    	System.out.println("MYSQL Tuple ADDFAILURE");
-	    	return false;
+	    	return Utils.FAIL;
 	    }
 	    
 	}
 	
 	@Override
-	public boolean updateTuple(String dbName, String tbName, String [] values) {
+	public String updateTuple(String dbName, String tbName, String [] values) {
        System.out.println("Updating records in the table...");
 		
 		String sql = String.format("LOCK TABLES %s.%s WRITE;UPDATE %s.%s SET NAME=? WHERE ID=?;UNLOCK TABLES;", dbName,tbName,dbName,tbName);
@@ -147,16 +176,16 @@ public class MySQLProxy extends DBProxy {
 	       preparedStmt.setInt (2, Integer.valueOf(values[0]));
 	       preparedStmt.execute();
 	       System.out.println("MYSQL Tuple modified");
-		   return true;
+		   return Utils.OK;
 	    }
 	    catch (Exception e) {
 	    	System.out.println("MYSQL Tuple MODFAILURE");
-	    	return false;
+	    	return Utils.FAIL;
 	    }
 	}
 
 	@Override
-	public boolean rmTuple(String dbname,String tbName, String filter) {
+	public String rmTuple(String dbname,String tbName, String filter) {
 		System.out.println("Removing records from the table...");
 		Statement st = null;
 		try 
@@ -166,7 +195,7 @@ public class MySQLProxy extends DBProxy {
 		catch (Exception e1) {
 			// TODO Auto-generated catch block
 			//e1.printStackTrace();
-			return false;
+			return Utils.FAIL;
 		}
 	      
 		
@@ -176,14 +205,14 @@ public class MySQLProxy extends DBProxy {
 	    {
 			st.executeUpdate(sql);
 			System.out.println("MYSQL Tuple removed");
-			return true;
+			return Utils.OK;
 		} 
 	    catch (Exception e) 
 	    {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 	    	System.out.println("MYSQL Tuple REMFAILURE");
-			return false;
+			return Utils.FAIL;
 		}
 	}
 	
@@ -222,7 +251,7 @@ public class MySQLProxy extends DBProxy {
 		
 	}
 	@Override
-	public boolean deleteTable(String dbName,String tbName) {
+	public String deleteTable(String dbName,String tbName) {
 		  System.out.println("Deleting table in given database...");
 		  Statement stmt = null;
 		  
@@ -231,7 +260,7 @@ public class MySQLProxy extends DBProxy {
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			//e1.printStackTrace();
-			return false;
+			return Utils.FAIL;
 		}
 	      
 	      String sql = "DROP TABLE IF EXISTS " + dbName + "." + tbName;
@@ -241,13 +270,13 @@ public class MySQLProxy extends DBProxy {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			return false;
+			return Utils.FAIL;
 		}
 	    System.out.println("Table deleted "+ tbName);
-		return true;
+		return Utils.OK;
 	}
 	@Override
-	public boolean deleteDB(String dbName) {
+	public String deleteDB(String dbName) {
 		Statement st;
 		try {
 			st = (Statement) connection.createStatement();
@@ -255,10 +284,10 @@ public class MySQLProxy extends DBProxy {
 			System.out.println("DB deleted "+ dbName);
 		} catch (Exception e) {
 			
-			return false;
+			return Utils.FAIL;
 		}
 		
-		return true;
+		return Utils.OK;
 	}
 
 }
