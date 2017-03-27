@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,14 +31,14 @@ public class Interceptor {
     	
     	if (actingDB.online()==false) {
 			  actingDB.connect("localhost");
-			  actingDB.deleteDB("mydb");
+			  //actingDB.deleteDB("mydb");
     	}
     }
     
     private void processRequests() throws IOException {
     	DatagramSocket socket = new DatagramSocket(Utils.DBPORT);
         
- 	    System.out.println ("Interceptor waits on " + actingDB.getClass());
+ 	    //System.out.println ("Interceptor waits on " + actingDB.getClass());
  	    String resp = "ok";
  	
  	    while (true) {
@@ -52,15 +53,16 @@ public class Interceptor {
  	      
  	      String response = responses.get(timestamp);
  	      if (response==null) {
- 	    	  System.out.println("MUST EXECUTE: " + request);
+ 	    	  //System.out.println("MUST EXECUTE: " + request);
  	    	  response = actingDB.runCommand(query);
         	  
         	  responses.put(timestamp, response);
         	  
  	      }
  	      
- 	      System.out.println("Back: " + response);
- 	      byte [] data = response.getBytes();
+ 	      //System.out.println("Back: " + response);
+ 	      //byte [] data = response.getBytes();
+ 	      byte [] data = (response+" " + actingDB).getBytes(StandardCharsets.UTF_8);
           socket.send(new DatagramPacket( data, data.length, receivePacket.getAddress(), Utils.DBPORT)); 
                     
         }

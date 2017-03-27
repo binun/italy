@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 
 
@@ -10,17 +11,17 @@ public class UDPClient
    private final static String hostsFile = "./hosts.config";
  
    private static String [] scenario = {
+	    //"deleteDB myDB",
 		"createDB myDB",
 		"createTable myDB myTable",
 		"addTuple myDB myTable 1 name1",
 		"addTuple myDB myTable 2 name2",
 		"fetch myDB myTable",
-		"rmTuple myDB myTable 1",
+		//"rmTuple myDB myTable 1",
 		"fetch myDB myTable",
-		"updateTuple myDB myTable 2 name3",
-		"fetch myDB myTable",
-		"deleteTable myDB myTable",
-		"deleteDB myDB"
+		//"updateTuple myDB myTable 2 name3",
+		"fetch myDB myTable"
+		//"deleteTable myDB myTable"
 };
    
    private String [] hosts = null;
@@ -66,7 +67,7 @@ public class UDPClient
 				   System.out.println(e.getMessage());    
 				    continue;
 			   }
-	    	   byte [] data = message.getBytes() ;
+	    	   byte [] data = message.getBytes(StandardCharsets.UTF_8) ;
 	           DatagramPacket packet = new DatagramPacket( data, data.length, ha, Utils.REPLICAPORT) ;
 	           System.out.println("  Sending " + message + " to " + host);
 	           try 
@@ -92,7 +93,7 @@ public class UDPClient
 			   }
 	           
        	       String replicaResponse = new String( rpRespPacket.getData());
-       	       //System.out.println("  Obtaining " + replicaResponse + " from  " + host);
+       	       System.out.println("  Obtaining " + replicaResponse + " from  " + host);
 	       }
 	       
 	       Thread.currentThread().sleep(Utils.CLIENT_COLLECT_DELAY);

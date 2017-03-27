@@ -1,8 +1,16 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,8 +23,8 @@ public class Utils {
 	
 	public static final int DBMS_REFRESH = 5000; //milliseconds
 	//public static Integer [] ports = {3306,27017,7199,7000,7001,9160,9042};
-	public static Integer [] ports = {3306,7000,7001,7199,9042,9160,27017};
-	//public static Integer [] ports = {3306,7000,7001,7199,9042,9160};
+	//public static Integer [] ports = {3306,7000,7001,7199,9042,9160,27017};
+	public static Integer [] ports = {27017};
     public static String prefixIP = "172.17.0.";
     public static int startReplica = 1;
     public static int DBPORT = 6666;
@@ -123,31 +131,30 @@ public class Utils {
 		return result.toArray(new String[0]);
 	  }
 	
-	public static String execCommand(String command) {
-		String line="";
-	    String result="";
-		
-		System.out.println("       EXECUTE " + command);
+	public static void execCommand(String command) throws IOException {
+		StringBuffer sb = new StringBuffer();
 		
 		try 
 		{	       
 		     Process p = Runtime.getRuntime().exec(command);
 		     p.waitFor();
-		     BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		     while ((line = in.readLine()) != null) {
+		     //BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		     //String line = "";
+		     //while ((line = in.readLine()) != null) {
 		        //System.out.println(line); 
-		    	result = result + " " + line;
-		     }
+		    	//output.append(line);
+		     //}
 		       
 	        p.destroy();
-		    in.close();
+		    //in.close();
 		} 
 		catch (Exception ex) 
 		{
-		    //ex.printStackTrace();
+		    ex.printStackTrace();
 		}
-		//System.out.println("       RESPONSE " + command);
-		return result;
+		
+		//return Utils.OK;
+		
 	  }
 	
 	  private String mostFrequent(String [] arr, float fraction) 

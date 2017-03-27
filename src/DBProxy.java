@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +27,9 @@ public abstract class DBProxy {
       this.res = false;
       this.colIDs[0] = "id";
       this.colIDs[1] = "name";
+      
+      new File("log.txt").delete();
+	  new File("reslog.txt").delete();
    }
   
   public int getPort() { return port; }
@@ -47,27 +51,27 @@ public abstract class DBProxy {
 	
 	if (parsed[0].equals("deleteDB")) {
 		result = deleteDB(dbname);
-	}
-	
-	String tbname = parsed[2];
+	}	
 	
     if (parsed[0].equals("createTable")) {
-		
+    	String tbname = parsed[2];
 		result = createTable(dbname,tbname);
 	}
     
     if (parsed[0].equals("deleteTable")) {
+    	String tbname = parsed[2];
 		result = deleteTable(dbname,tbname);
 	}
        
     if (parsed[0].equals("fetch")) {
+    	String tbname = parsed[2];
 		result = fetch(dbname,tbname);
 	}
     
     String [] args = new String[2];
     
     if (parsed[0].equals("addTuple")) {
-    	
+    	String tbname = parsed[2];
     	for (int i = 3; i < parsed.length; i++)
     		args[i-3] = parsed[i];
     	
@@ -75,7 +79,7 @@ public abstract class DBProxy {
 	}
     
     if (parsed[0].equals("updateTuple")) {
-
+    	String tbname = parsed[2];
     	for (int i = 3; i < parsed.length; i++)
     		args[i-3] = parsed[i];
     	
@@ -83,12 +87,13 @@ public abstract class DBProxy {
 	}
     
     if (parsed[0].equals("rmTuple")) {
+    	String tbname = parsed[2];
     	String arg = parsed[3];
     	
     	result = rmTuple(dbname,tbname,arg);
     }
     
-    if (parsed[0].equals("fetch")==false) {
+    /*if (parsed[0].equals("fetch")==false) {
     	
     	String [] ptraits = posTraits.get(parsed[0]).split(" ");
     	String [] ntraits = negTraits.get(parsed[0]).split(" ");
@@ -105,7 +110,7 @@ public abstract class DBProxy {
     		result= Utils.OK;
     	else
     		result= Utils.FAIL;
-    }
+    }*/
     
 	return result;
   }

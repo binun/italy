@@ -1,5 +1,10 @@
 
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +27,16 @@ public class CassandraProxy extends DBProxy {
 	
 	private String shellExec(String command) {
 		
-		return "cqlsh -e " + '"'+ command + '"';
+		String result = command ;
+		try {
+		    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("log.txt", true)));
+		    out.println(result);
+		    out.close();
+		} catch (Exception e) {
+		    //exception handling left as an exercise for the reader
+		}
+		
+		return result;
 	}
     
     public CassandraProxy() {
@@ -55,6 +69,8 @@ public class CassandraProxy extends DBProxy {
 			 put("rmTuple", "ok");
 		    }
 		};
+		
+		
 	}
     
     public String toString() {
@@ -72,10 +88,16 @@ public class CassandraProxy extends DBProxy {
 		
 		String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		
-        String cmdres = Utils.execCommand(shellExec(query));
+        String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return cmdres;
-        //String remain = cmdres.replaceAll("\\s+"," ");
-		//return (remain.length()<2);
+        //String remain = cmdres.replaceAll("\\s+","");
+		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
@@ -83,58 +105,90 @@ public class CassandraProxy extends DBProxy {
 		
 		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columnDef);
 		
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return cmdres;
         //String remain = cmdres.replaceAll("\\s+","");
-		//return (remain.length()<2);
+        //return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
 	public String addTuple(String dbname, String tbname, String [] values) {
-		System.out.println("Inserting records into the table...");
+		//System.out.println("Inserting records into the table...");
 		String query= String.format("INSERT INTO %s.%s(%s,%s) VALUES(%s,%s)", 
 				   dbname, tbname, 
 				   colIDs[0],colIDs[1],
-				   values[0], "'"+values[1]+"'");
+				   values[0], "\\" + '\"' +values[1] + "\\" + '\"');
 		
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return cmdres;
 		//String remain = cmdres.replaceAll("\\s+",""); 
-		//return (remain.length()<2);
+		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 	
 	@Override
 	public String updateTuple(String dbname, String tbname, String [] values) {
-		System.out.println("Updating records into the table...");
-		String query= String.format("UPDATE %s.%s SET name=\'%s\' WHERE id=%s;", 
-				   dbname, tbname, values[0],values[1]);
+		//System.out.println("Updating records into the table...");
+		String query= String.format("UPDATE %s.%s SET name=%s WHERE id=%s;", 
+				   dbname, tbname, 
+				   "\\" + '\"' +values[1] + "\\" + '\"',
+				   values[0]);
 		
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return cmdres;
 		//String remain = cmdres.replaceAll("\\s+","");    
-		//return (remain.length()<2);
+		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 
 	@Override
 	public String rmTuple(String dbname, String tbname, String id) {
-		System.out.println("Deleting records in the table...");
+		//System.out.println("Deleting records in the table...");
 		String query= String.format("DELETE FROM %s.%s WHERE id=%s;", 
 				   dbname, tbname, id);
 		
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return cmdres;
 		//String remain = cmdres.replaceAll("\\s+","");   
-		//return (remain.length()<2);
+		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
 	public String fetch(String dbname, String tbname) {
-		System.out.println("Retreving records from the table...");
+		//System.out.println("Retreving records from the table...");
 		String query= String.format("SELECT * FROM %s.%s;", 
 				   dbname, tbname);
 		
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
 		return cmdres;
 	}
@@ -149,18 +203,30 @@ public class CassandraProxy extends DBProxy {
 	public String deleteTable(String dbname,String tbname) {
 
 		String query= "DROP TABLE " + dbname + "." + tbname + ";";
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return cmdres;
         //String remain = cmdres.replaceAll("\\s+","");    
-		//return (remain.length()<2);
+        //return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
 	public String deleteDB(String dbname) {
 		String query= "DROP KEYSPACE " + dbname + ";";
-		String cmdres = Utils.execCommand(shellExec(query));
+		String cmdres = "";
+		try {
+			cmdres = shellExec(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return cmdres;
         //String remain = cmdres.replaceAll("\\s+","");
-		//return (remain.length()<2);
+        //return (remain.length()<2) ? Utils.OK : remain;
 	}
 }

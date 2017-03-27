@@ -3,6 +3,7 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 
 
 public class Client {
@@ -16,7 +17,7 @@ public class Client {
 	      byte[] sendData = new byte[1024];
 	      byte[] receiveData = new byte[1024];
 	      String sentence = inFromUser.readLine();
-	      sendData = sentence.getBytes();
+	      sendData = sentence.getBytes(StandardCharsets.UTF_8);
 	      DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
 	      clientSocket.send(sendPacket);
 	      DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);

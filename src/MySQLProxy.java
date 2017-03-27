@@ -113,7 +113,7 @@ public class MySQLProxy extends DBProxy {
 			int result=st.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
 			System.out.println("MYSQL DB created... " + dbName);
 			return Utils.OK;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.out.println("MYSQL DB CREATFAILURE... " + dbName);
@@ -136,7 +136,7 @@ public class MySQLProxy extends DBProxy {
 			st.executeUpdate(String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s)", dbname,tbName,columnsDef));		
 			System.out.println("MYSQL Table created... " + tbName);
 			return Utils.OK;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.out.println("MYSQL Table CREATFAILURE... " + tbName);
@@ -236,7 +236,7 @@ public class MySQLProxy extends DBProxy {
 		  catch (Exception e)
 		  {
 		    System.err.println("Got an exception! " + e.getMessage());
-		    return null;
+		    return Utils.FAIL;
 		  }
 		 return result;
 	}

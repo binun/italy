@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +61,7 @@ public class Server {
     	    	
     	    	System.out.printf(" ------> FORWARD %s TO %s\n", sentence,dBHost);
         	    
-    	    	dbSocket.send(new DatagramPacket( sentence.getBytes(), sentence.getBytes().length, InetAddress.getByName(dBHost), Utils.DBPORT)); 	    
+    	    	dbSocket.send(new DatagramPacket( sentence.getBytes(StandardCharsets.UTF_8), sentence.getBytes(StandardCharsets.UTF_8).length, InetAddress.getByName(dBHost), Utils.DBPORT)); 	    
         	    DatagramPacket dbRespPacket = new DatagramPacket(dataFromDB, dataFromDB.length);
         	    dbSocket.receive(dbRespPacket);
         	    dbResponse = new String( dbRespPacket.getData());
@@ -71,7 +72,7 @@ public class Server {
     	    
     	     Thread.currentThread().sleep(Utils.REPLICA_COLLECT_DELAY);
     	     String totalResponse = String.join("_", responses);
-    	     byte [] data1 = totalResponse.getBytes();
+    	     byte [] data1 = totalResponse.getBytes(StandardCharsets.UTF_8);
     	     serverSocket.send(new DatagramPacket( data1, data1.length, InetAddress.getByName(clientIP), clientport)); 
     	 }   
     	}
