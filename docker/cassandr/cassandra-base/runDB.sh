@@ -60,4 +60,4 @@ if [ $1 == 'fetch' ]; then
    printf "SELECT *.* FROM $dbname.$tbname;" > $filename
 fi
 
-cat $filename | mongo > $res
+cqlsh -f $filename localhost > $res

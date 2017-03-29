@@ -60,4 +60,4 @@ if [ $1 == 'fetch' ]; then
    printf "SELECT *.* FROM $dbname.$tbname;" > $filename
 fi
 
-cqlsh -f $filename > $res
+cqlsh -f $filename localhost > $res

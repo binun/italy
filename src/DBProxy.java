@@ -1,6 +1,9 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -154,9 +157,9 @@ public abstract class DBProxy {
       try {
 		
 		
-		//PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("log.txt", true)));
-		//out.println(command);
-		//out.close();
+		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("log.txt", true)));
+		out.println(command);
+		out.close();
 		
 		Utils.execCommand(command.replaceAll("\0", ""));
 		
@@ -176,8 +179,11 @@ public abstract class DBProxy {
       }
       catch (Exception e) {
     	  e.printStackTrace();
-      }	  
-      return sb.toString();		
+      }	     
+      
+      if (sb.length()<=3)
+    	  return Utils.OK;
+      else return sb.toString();		
 	}
   
   
