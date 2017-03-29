@@ -23,6 +23,10 @@ ENV CASSANDRA_CONFIG /etc/cassandra
 
 COPY clearState.sh /clearState.sh
 RUN chmod 0777 /clearState.sh
+
+COPY runDB.sh /runDB.sh
+RUN chmod 0777 /runDB.sh
+
 # Run base config script
 ADD scripts/config-cassandra-base.sh /usr/local/bin/config-cassandra-base
 RUN /usr/local/bin/config-cassandra-base

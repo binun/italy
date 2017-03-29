@@ -37,8 +37,6 @@ public class MongoProxy extends DBProxy {
     private DB curDB;
     private DBCollection curTable;
     private String [] colNames;
-    private String mongores = "mongoresult.txt";
-    private String queryS = "/runMongo.sh ";
     
     public MongoProxy() {
     	
@@ -81,37 +79,6 @@ public class MongoProxy extends DBProxy {
 		return "MongoProxy "; 
 	}
     
-    private String shellExec(String command) {
-      StringBuffer sb = new StringBuffer();
-      try {
-		
-		
-		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("log.txt", true)));
-		out.println(command);
-		out.close();
-		
-		Utils.execCommand(command.replaceAll("\0", ""));
-		
-		File temp = new File(mongores);
-		while (temp.exists()==false) {}
-		
-		BufferedReader br = new BufferedReader(new FileReader(temp));
-		
-	   
-	    String line = br.readLine();
-
-	    while (line != null) {
-	        sb.append(line);
-	        sb.append("\n");
-	        line = br.readLine();
-	    }
-      }
-      catch (Exception e) {
-    	  e.printStackTrace();
-      }	  
-      return sb.toString();		
-	}
-    
 	@Override
 	public boolean connect(String hostName)  {
 		connected=true;
@@ -121,8 +88,10 @@ public class MongoProxy extends DBProxy {
 	@Override
 	public String createDB(String dbName) {
 		
-		String query = String.format("./runMongo.sh createDB %s", dbName);	
-		return shellExec(query);
+		//String query = queryS + String.format("createDB %s", dbName);	
+		//return shellExec(query);
+		String parental = super.createDB(dbName);
+		return parental;
 		//String [] commands = new String[3];
 		//commands[0] = this.queryS;
 		//commands[1] = "createDB";
@@ -146,8 +115,8 @@ public class MongoProxy extends DBProxy {
 		//commands[2] = dbname;
 		//commands[3] = tbName;
 		//return shellExec(query);
-		String query = String.format("./runMongo.sh createTable %s %s", dbname,tbName);	
-		return shellExec(query);
+		String parental = super.createTable(dbname, tbName);
+		return parental;
 		/*MessageFormat messageFormat = new MessageFormat("use {0}\ndb.createCollection(''{1}'')");
 		Object[] args = {dbname, tbName};
 		String query = messageFormat.format(args);
@@ -177,9 +146,8 @@ public class MongoProxy extends DBProxy {
 		
 		
 		//return shellExec(commands);
-		String query = String.format("./runMongo.sh addTuple %s %s %s %s %s %s", 
-		  dbname,tbName,this.colIDs[0],values[0],this.colIDs[1],values[1]);
-		return shellExec(query);
+		String parental = super.addTuple( dbname,  tbName, values);
+		return parental;
 		
 		///String cmdres = Utils.execCommand(shellExec(query));
 		//return cmdres;
@@ -200,8 +168,9 @@ public class MongoProxy extends DBProxy {
 	
 	@Override
 	public String updateTuple(String dbName, String tbName, String [] values) {
-		String query = String.format("./runMongo.sh updateTuple %s %s %s %s %s %s", 
-				dbName,tbName,this.colIDs[0],values[0],this.colIDs[1],values[1]);	
+		
+		String parental = super.updateTuple( dbName,  tbName, values);
+		return parental;
 		//String [] commands = new String[8];
 		//commands[0] = this.queryS;
 		//commands[1] = "updateTuple";
@@ -213,7 +182,7 @@ public class MongoProxy extends DBProxy {
 		//commands[7] = values[1];
 		
 		//return shellExec(commands);
-		return shellExec(query);
+		//return shellExec(query);
 	
 		//String query = String.format("use %s\ndb.%s.update({%s:%s},{%s:%s,%s:%s} )", 
 				//dbName, tbName,
@@ -239,6 +208,8 @@ public class MongoProxy extends DBProxy {
 	@Override
 	public String rmTuple(String dbName, String tbName,String filter) {
 		
+		String parental = super.rmTuple( dbName,  tbName, filter);
+		return parental;
 		//String [] commands = new String[6];
 		//commands[0] = this.queryS;
 		//commands[1] = "rmTuple";
@@ -248,9 +219,7 @@ public class MongoProxy extends DBProxy {
 		//commands[5] = filter;
 		//return shellExec(commands);
 		
-		String query = String.format("./runMongo.sh rmTuple %s %s %s %s", 
-				dbName,tbName,this.colIDs[0],filter);	
-		return shellExec(query);
+		
 		//String query = String.format("use %s\ndb.%s.deleteMany({%s:%s})", 
 				//dbName, tbName,
 				//this.colIDs[0],filter);
@@ -275,8 +244,8 @@ public class MongoProxy extends DBProxy {
 		//commands[3] = tbName;
 		//return shellExec(commands);
 		
-		String query = String.format("./runMongo.sh fetch %s %s", dbName,tbName);	
-		return shellExec(query);
+		String parental = super.fetch( dbName,  tbName);
+		return parental;
 		///String query = String.format("use %s\ndb.%s.find()", 
 				//dbName, tbName);
 		
@@ -312,8 +281,8 @@ public class MongoProxy extends DBProxy {
 		//commands[2] = dbname;
 		//commands[3] = tbName;
 		//return shellExec(commands);
-		String query = String.format("./runMongo.sh deleteTable %s %s", dbname,tbName);
-		return shellExec(query);
+		String parental = super.deleteTable( dbname,  tbName);
+		return parental;
 		//String cmdres = Utils.execCommand(shellExec(query));
 		//return cmdres;
         //String remain = cmdres.replaceAll("\\s+","");
@@ -329,8 +298,8 @@ public class MongoProxy extends DBProxy {
 		//commands[2] = dbName;
 		
 		//return shellExec(commands);
-		String query = String.format("./runMongo.sh deleteDB %s", dbName);	
-		return shellExec(query);
+		String parental = super.deleteDB( dbName);
+		return parental;
 		//String query = String.format("use %s\ndb.dropDatabase()", 
 				//dbName);
 		

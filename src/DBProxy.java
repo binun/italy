@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,9 @@ public abstract class DBProxy {
 
   Map<String,String> posTraits;
   Map<String,String> negTraits;
+  
+  protected String resfile = "dbresult.txt";
+  protected String queryS = "/runDB.sh ";
  
   protected DBProxy(int port, String startDB) {
       this.port = port;
@@ -144,16 +149,86 @@ public abstract class DBProxy {
 		
 	}
   
+  protected String shellExec(String command) {
+      StringBuffer sb = new StringBuffer();
+      try {
+		
+		
+		//PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("log.txt", true)));
+		//out.println(command);
+		//out.close();
+		
+		Utils.execCommand(command.replaceAll("\0", ""));
+		
+		File temp = new File(resfile);
+		while (temp.exists()==false) {}
+		
+		BufferedReader br = new BufferedReader(new FileReader(temp));
+		
+	   
+	    String line = br.readLine();
+
+	    while (line != null) {
+	        sb.append(line);
+	        sb.append("\n");
+	        line = br.readLine();
+	    }
+      }
+      catch (Exception e) {
+    	  e.printStackTrace();
+      }	  
+      return sb.toString();		
+	}
+  
+  
+  
+  protected String createDB(String dbName) {
+	  String query = queryS + String.format("createDB %s", dbName);	
+	  return shellExec(query);
+  }
+  
+  protected String createTable(String dbName, String tbName) {
+	  String query = queryS + String.format("createTable %s %s", dbName,tbName);	
+	  return shellExec(query);
+  }
+  
+  protected String addTuple(String dbName, String tbName,String [] values) {
+	  String query = queryS + 
+				String.format("addTuple %s %s %s %s %s %s", 
+		          dbName,tbName,this.colIDs[0],values[0],this.colIDs[1],values[1]);
+	  return shellExec(query);
+  }
+  
+  protected String rmTuple(String dbName, String tbName,String filter) {
+	  String query = queryS + String.format("rmTuple %s %s %s %s", 
+				dbName,tbName,this.colIDs[0],filter);	
+	  return shellExec(query);
+  }
+  
+  protected String updateTuple(String dbName, String tbName,String [] values) {
+	  String query = String.format("./runMongo.sh updateTuple %s %s %s %s %s %s", 
+				dbName,tbName,this.colIDs[0],values[0],this.colIDs[1],values[1]);	
+		return shellExec(query);
+  }
+  
+  protected String fetch(String dbName, String tbName) {
+	  String query = queryS + String.format("fetch %s %s", dbName,tbName);	
+	  return shellExec(query);
+  }
+  
+  protected String deleteTable(String dbname, String tbname) {
+	  String query = queryS + String.format("deleteTable %s %s", dbname,tbname);
+	  return shellExec(query);
+  }
+  
+  protected String deleteDB(String dbName) {
+	  String query = queryS + String.format("deleteDB %s", dbName);	
+	  return shellExec(query);
+  }
+  
+  public boolean online() {return connected; }
+  
   public abstract boolean connect(String host);
   public abstract boolean disconnect(); 
-  public abstract String createDB(String dbName);  
-  public abstract String createTable(String dbName, String tbName);
-  public abstract String addTuple(String dbName, String tbName,String [] values);
-  public abstract String rmTuple(String dbName, String tbName,String filter);
-  public abstract String updateTuple(String dbName, String tbName,String [] values);
-  public abstract String fetch(String dbName, String tbName);
-  public abstract String deleteTable(String dbname, String tbname);
-  public abstract String deleteDB(String dbName);
-  public boolean online() {return connected; }
   
 }

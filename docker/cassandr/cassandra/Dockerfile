@@ -8,6 +8,9 @@ FROM spotify/cassandra:base
 
 USER root
 
+COPY runDB.sh /runDB.sh
+RUN chmod 0777 /runDB.sh
+
 # Place single-node startup-config script
 ADD scripts/cassandra-singlenode.sh /usr/local/bin/cassandra-singlenode
 

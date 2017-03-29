@@ -1,7 +1,7 @@
 #!/bin/bash
 
 filename=test.js
-res=mongoresult.txt
+res=dbresult.txt
 
 if [ $1 == 'createDB' ]; then
    dbname=$2

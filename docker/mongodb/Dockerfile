@@ -10,8 +10,8 @@ RUN dnf clean all && dnf update -y
 # Final package install once everything is working.  Once everything is working, the intent is to use the MongoDB client from outside the container. You need either this line, or the previous package install line, but  not both.
 RUN dnf -y install mongodb mongodb-server && dnf clean all
 RUN mkdir -p /data/db
-COPY runMongo.sh /runMongo.sh
-RUN chmod 0777 /runMongo.sh
+COPY runDB.sh /runDB.sh
+RUN chmod 0777 /runDB.sh
 EXPOSE 6666 27017
 ENTRYPOINT ["/usr/bin/mongod"]
 

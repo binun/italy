@@ -25,7 +25,7 @@ public class CassandraProxy extends DBProxy {
 	private Session session;
 	private String columnDef;
 	
-	private String shellExec(String command) {
+	/*private String shellExec(String command) {
 		
 		String result = command ;
 		try {
@@ -37,7 +37,7 @@ public class CassandraProxy extends DBProxy {
 		}
 		
 		return result;
-	}
+	}*/
     
     public CassandraProxy() {
 		super(7000, "system");
@@ -86,7 +86,10 @@ public class CassandraProxy extends DBProxy {
 	@Override
 	public String createDB(String dbName) {
 		
-		String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
+		String parental = super.createDB(dbName);
+		return parental;
+		
+		/*String query = "CREATE KEYSPACE IF NOT EXISTS " +  dbName + " WITH replication " + "= {'class':'SimpleStrategy', 'replication_factor':1};";	
 		
         String cmdres = "";
 		try {
@@ -95,15 +98,15 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        return cmdres;
-        //String remain = cmdres.replaceAll("\\s+","");
-		//return (remain.length()<2) ? Utils.OK : remain;
+        return cmdres;*/
+        
 	}
 
 	@Override
 	public String createTable(String dbname,String tbName) {
-		
-		String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columnDef);
+		String parental = super.createTable(dbname, tbName);
+		return parental;
+		/*String query= String.format("CREATE TABLE IF NOT EXISTS %s.%s(%s);", dbname, tbName, columnDef);
 		
 		String cmdres = "";
 		try {
@@ -112,15 +115,18 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return cmdres;
+		return cmdres;*/
         //String remain = cmdres.replaceAll("\\s+","");
         //return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
 	public String addTuple(String dbname, String tbname, String [] values) {
+		String parental = super.addTuple( dbname,  tbname, values);
+		return parental;
+		
 		//System.out.println("Inserting records into the table...");
-		String query= String.format("INSERT INTO %s.%s(%s,%s) VALUES(%s,%s)", 
+		/*String query= String.format("INSERT INTO %s.%s(%s,%s) VALUES(%s,%s)", 
 				   dbname, tbname, 
 				   colIDs[0],colIDs[1],
 				   values[0], "\\" + '\"' +values[1] + "\\" + '\"');
@@ -132,15 +138,18 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        return cmdres;
+        return cmdres;*/
 		//String remain = cmdres.replaceAll("\\s+",""); 
 		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 	
 	@Override
 	public String updateTuple(String dbname, String tbname, String [] values) {
+		
+		String parental = super.updateTuple( dbname,  tbname, values);
+		return parental;
 		//System.out.println("Updating records into the table...");
-		String query= String.format("UPDATE %s.%s SET name=%s WHERE id=%s;", 
+		/*String query= String.format("UPDATE %s.%s SET name=%s WHERE id=%s;", 
 				   dbname, tbname, 
 				   "\\" + '\"' +values[1] + "\\" + '\"',
 				   values[0]);
@@ -152,16 +161,19 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        return cmdres;
+        return cmdres;*/
 		//String remain = cmdres.replaceAll("\\s+","");    
 		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 
 	@Override
-	public String rmTuple(String dbname, String tbname, String id) {
+	public String rmTuple(String dbname, String tbname, String filter) {
+		
+		String parental = super.rmTuple( dbname,  tbname, filter);
+		return parental;
 		//System.out.println("Deleting records in the table...");
-		String query= String.format("DELETE FROM %s.%s WHERE id=%s;", 
+		/*String query= String.format("DELETE FROM %s.%s WHERE id=%s;", 
 				   dbname, tbname, id);
 		
 		String cmdres = "";
@@ -171,15 +183,17 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        return cmdres;
+        return cmdres;*/
 		//String remain = cmdres.replaceAll("\\s+","");   
 		//return (remain.length()<2) ? Utils.OK : remain;
 	}
 
 	@Override
 	public String fetch(String dbname, String tbname) {
+		String parental = super.fetch( dbname,  tbname);
+		return parental;
 		//System.out.println("Retreving records from the table...");
-		String query= String.format("SELECT * FROM %s.%s;", 
+		/*String query= String.format("SELECT * FROM %s.%s;", 
 				   dbname, tbname);
 		
 		String cmdres = "";
@@ -190,7 +204,7 @@ public class CassandraProxy extends DBProxy {
 			e.printStackTrace();
 		}
         
-		return cmdres;
+		return cmdres;*/
 	}
 
 	@Override
@@ -201,8 +215,9 @@ public class CassandraProxy extends DBProxy {
 	}
 	@Override
 	public String deleteTable(String dbname,String tbname) {
-
-		String query= "DROP TABLE " + dbname + "." + tbname + ";";
+		String parental = super.deleteTable( dbname,  tbname);
+		return parental;
+		/*String query= "DROP TABLE " + dbname + "." + tbname + ";";
 		String cmdres = "";
 		try {
 			cmdres = shellExec(query);
@@ -225,7 +240,7 @@ public class CassandraProxy extends DBProxy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return cmdres;
+		return cmdres;*/
         //String remain = cmdres.replaceAll("\\s+","");
         //return (remain.length()<2) ? Utils.OK : remain;
 	}
