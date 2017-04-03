@@ -48,14 +48,14 @@ public class MongoProxy extends DBProxy {
 		posTraits = new HashMap<String, String>()
 		{
 		  {
-			        put("createDB", "ok");
-			        put("deleteDB", "ok");
-			        put("createTable", "ok");
-			        put("deleteTable", "ok");
-			        put("fetch", "ok");
-			        put("addTuple", "ok");
-			        put("updateTuple", "ok");
-			        put("rmTuple", "ok");
+			        put("createDB", "switched to db");
+			        put("deleteDB", "");
+			        put("createTable", "switched to db ok");
+			        put("deleteTable", "switched to db true");
+			        put("fetch", "");
+			        put("addTuple", "ObjectID true");
+			        put("updateTuple", "switched matched modified 1");
+			        put("rmTuple", "true");
 		  }
 	    };
 	    
@@ -92,6 +92,7 @@ public class MongoProxy extends DBProxy {
 		//return shellExec(query);
 		String parental = super.createDB(dbName);
 		return parental;
+		//return super.filterCommand("createDB", parental);
 		//String [] commands = new String[3];
 		//commands[0] = this.queryS;
 		//commands[1] = "createDB";
@@ -116,6 +117,7 @@ public class MongoProxy extends DBProxy {
 		//commands[3] = tbName;
 		//return shellExec(query);
 		String parental = super.createTable(dbname, tbName);
+		//return super.filterCommand("createTable", parental);
 		return parental;
 		/*MessageFormat messageFormat = new MessageFormat("use {0}\ndb.createCollection(''{1}'')");
 		Object[] args = {dbname, tbName};
@@ -148,6 +150,7 @@ public class MongoProxy extends DBProxy {
 		//return shellExec(commands);
 		String parental = super.addTuple( dbname,  tbName, values);
 		return parental;
+		//return super.filterCommand("addTuple", parental);
 		
 		///String cmdres = Utils.execCommand(shellExec(query));
 		//return cmdres;
@@ -171,6 +174,7 @@ public class MongoProxy extends DBProxy {
 		
 		String parental = super.updateTuple( dbName,  tbName, values);
 		return parental;
+		//return super.filterCommand("updateTuple", parental);
 		//String [] commands = new String[8];
 		//commands[0] = this.queryS;
 		//commands[1] = "updateTuple";
@@ -210,6 +214,7 @@ public class MongoProxy extends DBProxy {
 		
 		String parental = super.rmTuple( dbName,  tbName, filter);
 		return parental;
+		//return super.filterCommand("rmTuple", parental);
 		//String [] commands = new String[6];
 		//commands[0] = this.queryS;
 		//commands[1] = "rmTuple";
@@ -246,6 +251,7 @@ public class MongoProxy extends DBProxy {
 		
 		String parental = super.fetch( dbName,  tbName);
 		return parental;
+		//return super.filterCommand("fetch", parental);
 		///String query = String.format("use %s\ndb.%s.find()", 
 				//dbName, tbName);
 		
@@ -283,6 +289,7 @@ public class MongoProxy extends DBProxy {
 		//return shellExec(commands);
 		String parental = super.deleteTable( dbname,  tbName);
 		return parental;
+		//return super.filterCommand("deleteTable", parental);
 		//String cmdres = Utils.execCommand(shellExec(query));
 		//return cmdres;
         //String remain = cmdres.replaceAll("\\s+","");
@@ -299,6 +306,7 @@ public class MongoProxy extends DBProxy {
 		
 		//return shellExec(commands);
 		String parental = super.deleteDB( dbName);
+		//return super.filterCommand("deleteDB", parental);
 		return parental;
 		//String query = String.format("use %s\ndb.dropDatabase()", 
 				//dbName);
@@ -310,6 +318,34 @@ public class MongoProxy extends DBProxy {
 		//connection.dropDatabase(dbName);
 		//return Utils.OK;
 	}
+
+	@Override
+	protected String filterFetch(String result) {
+		String [] strings = result.split("\n");
+		String res = "";
+		for (String s:strings)
+			if (s.contains("switched")==false)
+			  res = res + "@" + s;
+		return res;
+		/*int startOfData = result.indexOf("{");
+		int endOfData = result.indexOf("}");
+		if (startOfData > 0 && endOfData > 0 && startOfData - endOfData > 2) {
+			String res = "";
+			String data = result.substring(startOfData+1, endOfData-1);
+			data = data.replace("\"", "");
+			String[] pairs = data.split(",");
+			
+			for (int i=1; i < pairs.length;i++) {
+				String [] match = pairs[i].split(":");
+				res = res + " " + match[1];
+			}
+			return res;	
+		}
+		else
+			
+		return result;*/
+	}
+
 	
 }	
 

@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public abstract class DBProxy {
@@ -23,6 +24,7 @@ public abstract class DBProxy {
 
   Map<String,String> posTraits;
   Map<String,String> negTraits;
+ 
   
   protected String resfile = "dbresult.txt";
   protected String queryS = "/runDB.sh ";
@@ -42,6 +44,26 @@ public abstract class DBProxy {
   
   public int getPort() { return port; }
   public boolean isConnected() { return connected; }
+  
+  protected String filterCommand(String command,String original) {
+	 
+	  if (command.equals("fetch")==false)
+		  return Utils.OK;
+	  
+	  else return this.filterFetch(original);
+	  
+	  /*String [] ptraits = posTraits.get(command).split(" ");
+	  if (ptraits==null || ptraits.length==0)
+		  return original;
+	   
+	  boolean posPresent = true;
+	  for (String p: ptraits)
+		posPresent = posPresent && original.toLowerCase().contains(p);
+	  
+	  return posPresent? Utils.OK: Utils.FAIL;*/
+	  
+	  
+  }
   
   public String runCommand(String query) {
 	  
@@ -100,25 +122,7 @@ public abstract class DBProxy {
     	
     	result = rmTuple(dbname,tbname,arg);
     }
-    
-    /*if (parsed[0].equals("fetch")==false) {
-    	
-    	String [] ptraits = posTraits.get(parsed[0]).split(" ");
-    	String [] ntraits = negTraits.get(parsed[0]).split(" ");
-    	
-    	boolean posPresent = false, negPresent=false;
-    	for (String p: ptraits)
-    		if (result.contains(p))
-    			posPresent = true;
-    	for (String n: ntraits)
-    		if (result.contains(n))
-    			negPresent = true;
-    	
-    	if (posPresent && !negPresent)
-    		result= Utils.OK;
-    	else
-    		result= Utils.FAIL;
-    }*/
+    result = this.filterCommand(parsed[0],result);
     
 	return result;
   }
@@ -181,7 +185,7 @@ public abstract class DBProxy {
     	  e.printStackTrace();
       }	     
       
-      if (sb.length()<=3)
+      if (sb.length()<3)
     	  return Utils.OK;
       else return sb.toString();		
 	}
@@ -212,7 +216,7 @@ public abstract class DBProxy {
   }
   
   protected String updateTuple(String dbName, String tbName,String [] values) {
-	  String query = String.format("./runMongo.sh updateTuple %s %s %s %s %s %s", 
+	  String query = queryS + String.format("updateTuple %s %s %s %s %s %s", 
 				dbName,tbName,this.colIDs[0],values[0],this.colIDs[1],values[1]);	
 		return shellExec(query);
   }
@@ -233,6 +237,7 @@ public abstract class DBProxy {
   }
   
   public boolean online() {return connected; }
+  protected abstract String filterFetch(String result);
   
   public abstract boolean connect(String host);
   public abstract boolean disconnect(); 

@@ -1,11 +1,10 @@
 #!/bin/bash
 
 filename=test.cql
-res=dbresult.txt
 
 if [ $1 == 'createDB' ]; then
    dbname=$2
-   printf "CREATE KEYSPACE IF NOT EXISTS $dbname WITH replication = {\'class\':\'SimpleStrategy\', \'replication_factor\':1};"; > $filename
+   printf "CREATE KEYSPACE IF NOT EXISTS $dbname WITH replication = {\'class\':\'SimpleStrategy\', \'replication_factor\':1};" > $filename
 fi
 
 if [ $1 == 'createTable' ]; then
@@ -32,7 +31,7 @@ if [ $1 == 'addTuple' ]; then
    value1=$5
    key2=$6
    value2=$7
-   printf "INSERT INTO $dbname.$tbname($key1,$key2) VALUES($value1,\"$value2\");" > $filename
+   printf "INSERT INTO $dbname.$tbname($key1,$key2) VALUES($value1,\'$value2\');" > $filename
 fi
 
 if [ $1 == 'updateTuple' ]; then
@@ -42,7 +41,7 @@ if [ $1 == 'updateTuple' ]; then
    value1=$5
    key2=$6
    value2=$7
-   printf "UPDATE $dbname.$tbname SET $key2:\"$value2\" WHERE $key1=$value1;" > $filename
+   printf "UPDATE $dbname.$tbname SET $key2:\'$value2\' WHERE $key1=$value1;" > $filename
 fi
 
 if [ $1 == 'rmTuple' ]; then
@@ -50,14 +49,13 @@ if [ $1 == 'rmTuple' ]; then
    tbname=$3
    key=$4
    value=$5
-DELETE FROM %s.%s WHERE id=%s;"
    printf "DELETE FROM $dbname.$tbname WHERE $key=$value;" > $filename
 fi
 
 if [ $1 == 'fetch' ]; then
    dbname=$2
    tbname=$3
-   printf "SELECT *.* FROM $dbname.$tbname;" > $filename
+   printf "SELECT * FROM $dbname.$tbname;" > $filename
 fi
 
-cqlsh -f $filename localhost > $res
+cqlsh -f $filename localhost > dbresult.txt

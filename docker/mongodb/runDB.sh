@@ -59,4 +59,4 @@ if [ $1 == 'fetch' ]; then
    printf "use $dbname\ndb.$tbname.find()" > $filename
 fi
 
-cat $filename | mongo > $res
+cat $filename | mongo --quiet > $res

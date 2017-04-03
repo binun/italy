@@ -15,13 +15,14 @@ public class UDPClient
 		"createDB myDB",
 		"createTable myDB myTable",
 		"addTuple myDB myTable 1 name1",
-		"addTuple myDB myTable 2 name2",
 		"fetch myDB myTable",
+		"addTuple myDB myTable 2 name2",
+		
 		//"rmTuple myDB myTable 1",
 		"fetch myDB myTable",
-		//"updateTuple myDB myTable 2 name3",
-		"fetch myDB myTable"
-		//"deleteTable myDB myTable"
+		"updateTuple myDB myTable 2 name3",
+		"fetch myDB myTable",
+		"deleteTable myDB myTable"
 };
    
    private String [] hosts = null;
@@ -69,7 +70,7 @@ public class UDPClient
 			   }
 	    	   byte [] data = message.getBytes(StandardCharsets.UTF_8) ;
 	           DatagramPacket packet = new DatagramPacket( data, data.length, ha, Utils.REPLICAPORT) ;
-	           System.out.println("  Sending " + message + " to " + host);
+	           System.out.println("Sending " + message + " to " + host);
 	           try 
 	           {
 				    replicaSocket.send(packet);
@@ -80,7 +81,7 @@ public class UDPClient
 				    continue;
 			   }
 	           
-	           byte[] dataFromReplica = new byte[256];
+	           byte[] dataFromReplica = new byte[1024];
 	           DatagramPacket rpRespPacket = new DatagramPacket(dataFromReplica, dataFromReplica.length);
 	           try 
 	           {
@@ -93,7 +94,7 @@ public class UDPClient
 			   }
 	           
        	       String replicaResponse = new String( rpRespPacket.getData());
-       	       System.out.println("  Obtaining " + replicaResponse + " from  " + host);
+       	       System.out.println("        Obtaining " + replicaResponse + " from  " + host);
 	       }
 	       
 	       Thread.currentThread().sleep(Utils.CLIENT_COLLECT_DELAY);

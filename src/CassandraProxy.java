@@ -244,4 +244,10 @@ public class CassandraProxy extends DBProxy {
         //String remain = cmdres.replaceAll("\\s+","");
         //return (remain.length()<2) ? Utils.OK : remain;
 	}
+
+	@Override
+	protected String filterFetch(String result) {
+		// TODO Auto-generated method stub
+		return result;
+	}
 }

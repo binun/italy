@@ -49,24 +49,24 @@ public class Server {
     	    int clientport = receivePacket.getPort();
     	    clientIP = IPAddress.getHostName();
     	         
-    	    System.out.println("RECEIVED FROM CLIENT " + sentence + " from " + clientIP );
+    	    //System.out.println("RECEIVED FROM CLIENT " + sentence + " from " + clientIP );
   
     	    List<String> responses = new ArrayList<String>();
     	    
     	    synchronized(DBMSs) {
     	     for (String dBHost: DBMSs) 
     	     {
-    	    	byte[] dataFromDB = new byte[128];
+    	    	byte[] dataFromDB = new byte[512];
     	    	String dbResponse = "response-" + dBHost;
     	    	
-    	    	System.out.printf(" ------> FORWARD %s TO %s\n", sentence,dBHost);
+    	    	//System.out.printf(" ------> FORWARD %s TO %s\n", sentence,dBHost);
         	    
     	    	dbSocket.send(new DatagramPacket( sentence.getBytes(StandardCharsets.UTF_8), sentence.getBytes(StandardCharsets.UTF_8).length, InetAddress.getByName(dBHost), Utils.DBPORT)); 	    
         	    DatagramPacket dbRespPacket = new DatagramPacket(dataFromDB, dataFromDB.length);
         	    dbSocket.receive(dbRespPacket);
         	    dbResponse = new String( dbRespPacket.getData());
         	   
-        	    System.out.printf(" <------ RECEIVED %s FROM %s\n", dbResponse, dBHost);
+        	    //System.out.printf(" <------ RECEIVED %s FROM %s\n", dbResponse, dBHost);
         	    responses.add(dbResponse);
     	     }
     	    

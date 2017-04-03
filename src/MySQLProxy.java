@@ -290,4 +290,10 @@ public class MySQLProxy extends DBProxy {
 		return Utils.OK;
 	}
 
+	@Override
+	protected String filterFetch(String result) {
+		// TODO Auto-generated method stub
+		return result;
+	}
+
 }
